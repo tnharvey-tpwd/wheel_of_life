@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Wheel of Life — Interactive Workshop App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg: #0f1320;
+      --surface: #161a2b;
+      --text: #e8ecff;
+      --muted: #b9c2ff;
+      --accent: #6ea8fe;
+      --accent-2:#8fd3ff;
+      --ring: #29305a;
+      --handle: #ffd166;
+      --panel: #0e1330;
+      --border: #202642;
+      --band-stroke: #2a325b;
+      --swatch-border: #1c2244;
+      --focus: #9fd7ff;
+      --danger: #ef5350;
+      --input-bg: #0c1130;
+      --input-border: #2a325b;
+      --input-border-focus: #4b5cc2;
+      --input-placeholder: #8aa0d6;
+      --gridline: #2b335e;
+      --line: #8fd3ff;
+      --ma-line: #ffd166;
+      --zone-fill: rgba(76, 175, 80, 0.12);
+      --zone-stroke: #4caf50;
+      --isolines: #d1b3ff;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: radial-gradient(1200px circle at 10% 10%, #0b1020 0%, #0f1320 60%, #0d1224 100%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      line-height: 1.4;
+    }
+
+    header {
+      padding: 16px 24px;
+      display: flex; gap: 12px; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #202642;
+      background: linear-gradient(180deg, rgba(35,44,78,0.2), rgba(10,12,22,0.2));
+      position: sticky; top:0; z-index: 20;
+    }
+    header h1 { margin:0; font-size: 20px; letter-spacing: 0.2px; }
+    .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn { padding: 8px 12px; border-radius: 8px; border: 1px solid #2a325b; background: #131830; color: var(--text); cursor: pointer; font-weight: 600; font-size: 13px; }
+    .btn:hover { border-color: #3c4575; background: #161c37; }
+    .btn.primary { background: #243157; border-color: #5066b4; }
+    .btn.primary:hover { background: #283766; }
+    .btn.ghost { background: transparent; border-color: transparent; }
+    .btn.danger { background: #3b1d24; border-color: #69323f; color: #ffd8de; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 8px; padding: 10px 16px; border-bottom: 1px solid #202642; background: #0f142a; position: sticky; top:58px; z-index: 15; }
+    .tab { padding: 8px 12px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; font-weight: 700; color: var(--muted); }
+    .tab.active { color: var(--text); background: #1a2143; border-color: #2a3570; }
+
+    main { padding: 16px; max-width: 1200px; margin: 0 auto; }
+
+    .card { background: linear-gradient(180deg, #12162b, #0e1327); border: 1px solid #1f2443; border-radius: 14px; padding: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.25); }
+    .card h2 { margin: 0 0 6px; font-size: 18px; }
+    .small { font-size: 12px; color: var(--muted); }
+
+    /* Wheel */
+    .wheel-wrap { position: relative; min-height: 640px; display: grid; place-items: center; }
+    #wheel { width: 100%; max-width: 1100px; height: auto; aspect-ratio: 1 / 1; }
+
+    /* Legend */
+    .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 8px; margin-top: 10px; }
+    .legend .row { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; padding: 6px 8px; border: 1px dashed #2a325b; border-radius: 8px; background: #121631; }
+    .swatch { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--swatch-border); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05); }
+    .legend .name { font-weight: 600; }
+    .legend .val { font-variant-numeric: tabular-nums; color: var(--accent-2); }
+
+    .statline { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-top: 8px; }
+    .stat { border: 1px solid var(--border); border-radius: 10px; padding: 8px; background: #12162b; }
+    .stat .label { font-size: 12px; color: var(--muted); }
+    .stat .value { font-weight: 800; font-size: 18px; }
+
+    /* Action Plans */
+    .plans-panel { display: grid; gap: 16px; }
+    .plan-row { border: 1px solid var(--border); border-radius: 10px; padding: 12px; background: var(--panel); }
+    .plan-head { display:flex; justify-content: space-between; align-items:center; gap: 8px; }
+    .plan-title { font-weight: 800; }
+    .plan-score { font-variant-numeric: tabular-nums; color: var(--accent-2); font-weight: 700; }
+
+    .steps-header { margin-top: 8px; color: var(--muted); font-size: 12px; }
+    .steps-grid { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 8px; margin-top: 6px; }
+    @media (max-width: 750px) { .steps-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+    .step-wrap { display: grid; gap: 6px; }
+    .step-label { font-size: 11px; color: var(--muted); }
+    input.step { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text); font-size: 13px; }
+    input.step::placeholder { color: var(--input-placeholder); }
+    input.step:focus { outline: none; border-color: var(--input-border-focus); box-shadow: 0 0 0 3px rgba(143, 211, 255, 0.2); }
+    input.step[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+    /* History */
+    .history-toolbar { display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+    .history-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    .chart-card { border: 1px solid var(--border); border-radius: 10px; padding: 12px; background: var(--panel); }
+    .chart-title { font-weight: 700; margin-bottom: 8px; }
+    .chart-controls { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; align-items:center; }
+    .form-field { display:flex; gap:6px; align-items:center; }
+    .form-field label { font-size: 12px; color: var(--muted); }
+    select, input[type="number"] { padding: 6px 8px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text); }
+    input[type="checkbox"] { transform: scale(1.1); }
+    .category-charts { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+    @media (max-width: 900px) { .category-charts { grid-template-columns: 1fr; } }
+
+    .history-table { width: 100%; border-collapse: collapse; }
+    .history-table th, .history-table td { border: 1px solid #28305a; padding: 8px; font-size: 13px; }
+    .history-table th { background: #0f142a; color: var(--muted); text-align: left; }
+    .history-table tr:nth-child(even) td { background: #101535; }
+
+    /* SVG chart styles */
+    .chart-svg { width: 100%; height: auto; aspect-ratio: 16 / 9; }
+    .gridline { stroke: var(--gridline); stroke-width: 1; }
+    .axis-line { stroke: var(--muted); stroke-width: 1.2; }
+    .series-line { fill: none; stroke: var(--line); stroke-width: 2.2; }
+    .ma-line { fill: none; stroke: var(--ma-line); stroke-width: 2; stroke-dasharray: 5,3; }
+    .dot { fill: var(--line); }
+
+    /* Wheel SVG */
+    .ring { stroke: var(--ring); fill: none; }
+    .axis { stroke: #34406f; stroke-width: 1.25; }
+    .tick { stroke: #2f3967; stroke-width: 0.9; }
+    .cat-label { font-size: 12px; fill: var(--muted); }
+    .handle { fill: var(--handle); stroke: #2d244f; stroke-width: 2; cursor: pointer; }
+    .overlay { fill: transparent; cursor: crosshair; }
+    .center-dot { fill: #8fd3ff; opacity: 0.7; }
+    .band { stroke: var(--band-stroke); stroke-width: 0.6; stroke-linejoin: round; }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .sr-live { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+    /* --- Modal styling: fix visibility & layout --- */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      display: none; /* hidden by default; shown via JS on open */
+      place-items: center;
+      background: rgba(6, 8, 16, 0.6);
+      z-index: 100;
+    }
+    .modal {
+      width: min(800px, 92vw);
+      background: linear-gradient(180deg, #12162b, #0e1327);
+      border: 1px solid #1f2443;
+      border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    }
+    .modal header, .modal .footer {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 8px; padding: 12px 14px;
+    }
+    .modal header { border-bottom: 1px solid #1f2443; }
+    .modal .footer { border-top: 1px solid #1f2443; }
+    .modal .content { padding: 12px 14px; }
+    .edit-list { display: grid; gap: 8px; }
+    .edit-row {
+      display: grid; grid-template-columns: auto 1fr auto;
+      gap: 8px; align-items: center;
+      padding: 8px; background: #121631; border: 1px dashed #2a325b; border-radius: 8px;
+    }
+    .edit-row input[type="text"] {
+      padding: 8px; border-radius: 8px; border: 1px solid var(--input-border);
+      background: var(--input-bg); color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Wheel of Life</h1>
+      <div class="sub">Assess balance, set priorities, and plan actions</div>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="btnFullscreen">Full Screen</button>
+      <button class="btn" id="btnNew">New</button>
+      <button class="btn" id="btnSave">Save</button>
+      <button class="btn" id="btnLoad">Load</button>
+      <button class="btn primary" id="btnExport">Export PNG</button>
+      <button class="btn" id="btnSnapshot">Snapshot</button>
+      <button class="btn ghost" id="btnPrint">Print</button>
+      <button class="btn" id="btnEditCats">Edit Categories</button>
+      <input type="file" id="fileInput" accept=".json,.txt" style="display:none" />
+      <input type="file" id="snapFileInput" accept=".json,.txt" style="display:none" />
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="wheel">Wheel</button>
+    <button class="tab" data-tab="actions">Action Plans</button>
+    <button class="tab" data-tab="history">History</button>
+  </div>
+
+  <main>
+    <!-- WHEEL -->
+    <section id="page-wheel" class="page active">
+      <section class="card">
+        <h2>Interactive Wheel</h2>
+        <div class="small">Click or drag the yellow handles (snaps to 0.5). Use keyboard on legend rows.</div>
+
+        <div class="wheel-wrap">
+          <svg id="wheel" viewBox="0 0 1100 1100" role="img" aria-label="Wheel of Life chart" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="bgGrad" cx="50%" cy="50%" r="60%">
+                <stop offset="0%" stop-color="#0f1324"></stop>
+                <stop offset="100%" stop-color="#0b1020"></stop>
+              </radialGradient>
+            </defs>
+            <rect x="0" y="0" width="1100" height="1100" fill="url(#bgGrad)"></rect>
+
+            <g id="rings"></g>
+            <g id="axes"></g>
+            <g id="ticks"></g>
+            <g id="bands"></g>
+            <g id="labels"></g>
+
+            <!-- Overlay BEFORE handles (so handles remain draggable) -->
+            <rect class="overlay" x="0" y="0" width="1100" height="1100"></rect>
+
+            <g id="handles"></g>
+            <circle class="center-dot" cx="550" cy="550" r="3"></circle>
+          </svg>
+          <div id="liveRegion" class="sr-live" aria-live="polite" aria-atomic="true"></div>
+        </div>
+
+        <div id="legend" class="legend" aria-label="Category legend and current scores"></div>
+
+        <div class="statline">
+          <div class="stat"><div class="label">Average</div><div class="value" id="avgVal">5.0</div></div>
+          <div class="stat"><div class="label">Lowest</div><div class="value" id="minVal">5.0</div></div>
+          <div class="stat"><div class="label">Highest</div><div class="value" id="maxVal">5.0</div></div>
+          <div class="stat"><div class="label">Balance (σ)</div><div class="value" id="stdVal">0.00</div></div>
+        </div>
+      </section>
+    </section>
+
+    <!-- ACTION PLANS -->
+    <section id="page-actions" class="page">
+      <section class="card">
+        <h2>Action Plans</h2>
+        <div class="small">Plan one step for every point missing from a full 10.</div>
+        <div id="plansPanel" class="plans-panel"></div>
+      </section>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="page-history" class="page">
+      <section class="card">
+        <h2>History (Time Series)</h2>
+        <div class="small">Snapshots are stored locally. Export/import for portability.</div>
+
+        <div class="history-toolbar">
+          <button class="btn" id="btnExportSnaps">Export Snapshots (JSON)</button>
+          <button class="btn" id="btnImportSnaps">Import Snapshots</button>
+          <button class="btn danger" id="btnClearSnaps">Clear All Snapshots</button>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">Controls</div>
+          <div class="chart-controls">
+            <div class="form-field">
+              <label for="baselineSelect">Baseline:</label>
+              <select id="baselineSelect"></select>
+            </div>
+            <div class="form-field">
+              <label for="maToggle">Moving Avg:</label>
+              <input type="checkbox" id="maToggle" checked />
+            </div>
+            <div class="form-field">
+              <label for="maWindow">MA Window:</label>
+              <input type="number" id="maWindow" min="2" max="10" value="3" />
+            </div>
+            <div class="form-field">
+              <label for="targetAvg">Desired Avg ≥</label>
+              <input type="number" id="targetAvg" min="0" max="10" step="0.5" value="7" />
+            </div>
+            <div class="form-field">
+              <label for="targetSigma">Desired σ ≤</label>
+              <input type="number" id="targetSigma" min="0" max="5" step="0.1" value="1.5" />
+            </div>
+            <div class="form-field">
+              <label for="isoToggle">Show BAA iso-lines</label>
+              <input type="checkbox" id="isoToggle" checked />
+            </div>
+          </div>
+        </div>
+
+        <div class="history-grid">
+          <!-- Snapshots table card -->
+          <div class="chart-card">
+            <div class="chart-title">Snapshots</div>
+            <table class="history-table" id="historyTable" aria-label="Snapshot list">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Average</th>
+                  <th>σ</th>
+                  <th>Categories</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-title">Balance (σ) over time</div>
+            <div id="sigmaChart" class="chart-svg" role="img" aria-label="Balance sigma over time"></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-title">Average vs. Balance (σ)</div>
+            <div id="avgSigmaChart" class="chart-svg" role="img" aria-label="Average vs sigma"></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-title">Category trends (small multiples)</div>
+            <div id="categoryCharts" class="category-charts"></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-title">Delta vs Baseline (latest snapshot)</div>
+            <table class="history-table" id="deltaTable" aria-label="Delta vs baseline">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Baseline</th>
+                  <th>Latest</th>
+                  <th>Δ (Latest − Baseline)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+              <tfoot>
+                <tr><th>Overall Avg</th><td id="deltaAvgBase">–</td><td id="deltaAvgLatest">–</td><td id="deltaAvgDiff">–</td></tr>
+                <tr><th>Overall σ</th><td id="deltaSigmaBase">–</td><td id="deltaSigmaLatest">–</td><td id="deltaSigmaDiff">–</td></tr>
+                <tr><th>Balance‑Adjusted Avg (BAA)</th><td id="deltaBAABase">–</td><td id="deltaBAALatest">–</td><td id="deltaBAADiff">–</td></tr>
+                <tr><th>Relative Imbalance Index (RII)</th><td id="deltaRIIBase">–</td><td id="deltaRIILatest">–</td><td id="deltaRIIDiff">–</td></tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div class="footer-note">This tool is for self-reflection and planning. Data stays local unless you export.</div>
+
+  <!-- Modal -->
+  <div id="modalOverlay" class="modal-overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <header><h3 id="modalTitle">Edit Categories</h3><button class="btn" id="btnCloseModal">Close</button></header>
+      <div class="content">
+        <div class="small">Rename, reorder, add/remove. Changes update the wheel.</div>
+        <div id="editList" class="edit-list"></div>
+      </div>
+      <div class="footer">
+        <button class="btn" id="btnAddCategory">Add Category</button>
+        <button class="btn danger" id="btnResetCategories">Reset to Defaults</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ---------- CONFIG ---------- */
+    const MAX_VALUE = 10;
+    const SIZE = 1100;
+    const CX = SIZE / 2;
+    const CY = SIZE / 2;
+    const MARGIN = 60;
+    const RADIUS = (SIZE / 2) - MARGIN - 30;
+    const BAND_THICKNESS = RADIUS / MAX_VALUE;
+
+    const STEP_FINE = 0.5;
+    const STEP_COARSE = 1.0;
+
+    const STATE_KEY = 'wheelOfLifeState.v8';
+    const SNAPSHOTS_KEY = 'wheelOfLifeSnapshots.v1';
+
+    /* Disable mode for action steps: 'floor' | 'round' | 'ceil' */
+    const DISABLE_MODE = 'ceil';
+
+    /* Saturation curve for bands */
+    const SAT_MIN = 30, SAT_MAX = 80, LIGHTNESS = 52;
+
+    const DEFAULT_CATEGORIES = [
+      "Career","Finance","Health","Family & Friends","Romance","Personal Growth","Fun & Recreation","Physical Environment"
+    ];
+
+    /* ---------- STATE ---------- */
+    let categories = [...DEFAULT_CATEGORIES];
+    let values = new Array(categories.length).fill(5);
+    let notes = new Array(categories.length).fill('');
+    let steps = new Array(categories.length).fill(null).map(()=> new Array(10).fill(''));
+    let draggingIndex = null, pointerId = null;
+    let snapshots = [];
+
+    /* ---------- UTILS ---------- */
+    function angleForIndex(i, count=categories.length){ const step=(2*Math.PI)/count; return -Math.PI/2 + (i*step); }
+    function stepAngle(count=categories.length){ return (2*Math.PI)/count; }
+    function pointOnCircle(theta, r){ return { x: CX + r*Math.cos(theta), y: CY + r*Math.sin(theta) }; }
+    function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+    function roundTo(v, step=STEP_FINE){ return Math.round(v/step)*step; }
+    function valueToRadius(v){ return (v / MAX_VALUE) * RADIUS; }
+    function radiusToValue(r){ return clamp(roundTo((r / RADIUS) * MAX_VALUE, STEP_FINE), 0, MAX_VALUE); }
+    function fmtDate(ts){ return new Date(ts).toLocaleString(); }
+    function arrayAvg(arr){ return arr.reduce((a,b)=>a+b,0)/arr.length; }
+    function arrayStd(arr){ const avg=arrayAvg(arr); return Math.sqrt(arr.reduce((s,v)=>s+Math.pow(v-avg,2),0)/arr.length); }
+    function disabledCountForValue(v){
+      if (DISABLE_MODE==='ceil') return Math.min(MAX_VALUE, Math.ceil(v));
+      if (DISABLE_MODE==='round') return Math.min(MAX_VALUE, Math.round(v));
+      return Math.min(MAX_VALUE, Math.floor(v));
+    }
+    function hslToHex(h, s, l){
+      s/=100; l/=100;
+      const c=(1-Math.abs(2*l-1))*s, x=c*(1-Math.abs((h/60)%2-1)), m=l-c/2;
+      let r=0,g=0,b=0;
+      if(h<60){ r=c; g=x; } else if(h<120){ r=x; g=c; }
+      else if(h<180){ g=c; b=x; } else if(h<240){ g=x; b=c; }
+      else if(h<300){ r=x; b=c; } else { r=c; b=x; }
+      r=Math.round((r+m)*255); g=Math.round((g+m)*255); b=Math.round((b+m)*255);
+      const toHex=v=>v.toString(16).padStart(2,'0');
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    }
+    function buildPalette(count=categories.length){ return Array.from({length:count},(_,i)=> (i*360)/count ); }
+    let paletteHues = buildPalette();
+
+    /* Save/load current */
+    function saveLocal(){
+      const payload = { categories, values, notes, steps, ts: Date.now() };
+      try{ localStorage.setItem(STATE_KEY, JSON.stringify(payload)); }catch(e){}
+    }
+    function loadLocal(){
+      try{
+        const raw=localStorage.getItem(STATE_KEY); if(!raw) return false;
+        const obj=JSON.parse(raw);
+        if(!obj || !obj.categories || !obj.values) return false;
+        categories = obj.categories;
+        values = obj.values.map(v=> roundTo(v, STEP_FINE));
+        notes = obj.notes || new Array(categories.length).fill('');
+        steps = obj.steps && Array.isArray(obj.steps) ? obj.steps.map(arr=> (Array.isArray(arr)? arr.slice(0,10).concat(new Array(Math.max(0,10-(arr.length||0))).fill('')) : new Array(10).fill(''))) : new Array(categories.length).fill(null).map(()=> new Array(10).fill(''));
+        ensureArrayLengths();
+        return true;
+      }catch(e){ return false; }
+    }
+    function ensureArrayLengths(){
+      if(values.length!==categories.length) values=new Array(categories.length).fill(5);
+      if(notes.length!==categories.length) notes=new Array(categories.length).fill('');
+      if(steps.length!==categories.length) steps=new Array(categories.length).fill(null).map(()=> new Array(10).fill(''));
+    }
+
+    /* Snapshots */
+    function saveSnapshots(){ try{ localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify({snaps:snapshots})); }catch(e){} }
+    function loadSnapshots(){
+      try{
+        const raw=localStorage.getItem(SNAPSHOTS_KEY); if(!raw) return false;
+        const obj=JSON.parse(raw); if(!obj || !obj.snaps) return false;
+        snapshots=obj.snaps; return true;
+      }catch(e){ return false; }
+    }
+
+    /* ---------- SVG refs ---------- */
+    const svgEl=document.getElementById('wheel'),
+          ringsG=document.getElementById('rings'),
+          axesG=document.getElementById('axes'),
+          ticksG=document.getElementById('ticks'),
+          bandsG=document.getElementById('bands'),
+          labelsG=document.getElementById('labels'),
+          handlesG=document.getElementById('handles'),
+          overlayEl=document.querySelector('.overlay'),
+          legendEl=document.getElementById('legend'),
+          liveRegion=document.getElementById('liveRegion');
+
+    /* ---------- Wheel drawing ---------- */
+    function drawBase(){
+      ringsG.innerHTML=''; axesG.innerHTML=''; ticksG.innerHTML=''; labelsG.innerHTML=''; handlesG.innerHTML=''; bandsG.innerHTML='';
+      paletteHues = buildPalette(categories.length);
+
+      // Rings per unit
+      for(let r=BAND_THICKNESS; r<=RADIUS+0.001; r+=BAND_THICKNESS){
+        const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+        c.setAttribute('cx',CX); c.setAttribute('cy',CY); c.setAttribute('r',r.toFixed(2));
+        c.setAttribute('class','ring'); c.setAttribute('stroke-width',(r%(RADIUS/2)===0)?'1.4':'1.0');
+        ringsG.appendChild(c);
+      }
+      // Axes, ticks, labels, handles
+      const count=categories.length, step=stepAngle(count);
+      for(let i=0;i<count;i++){
+        const theta=angleForIndex(i,count), end=pointOnCircle(theta,RADIUS);
+        const axis=document.createElementNS('http://www.w3.org/2000/svg','line');
+        axis.setAttribute('x1',CX); axis.setAttribute('y1',CY); axis.setAttribute('x2',end.x.toFixed(2)); axis.setAttribute('y2',end.y.toFixed(2)); axis.setAttribute('class','axis'); axesG.appendChild(axis);
+        for(let v=1; v<MAX_VALUE; v++){
+          const tPt=pointOnCircle(theta,v*BAND_THICKNESS);
+          const tick=document.createElementNS('http://www.w3.org/2000/svg','circle');
+          tick.setAttribute('cx',tPt.x.toFixed(2)); tick.setAttribute('cy',tPt.y.toFixed(2)); tick.setAttribute('r','1.6'); tick.setAttribute('class','tick'); ticksG.appendChild(tick);
+        }
+        const labelR=RADIUS+18, labelPt=pointOnCircle(theta,labelR);
+        const lab=document.createElementNS('http://www.w3.org/2000/svg','text');
+        lab.setAttribute('x',labelPt.x.toFixed(2)); lab.setAttribute('y',labelPt.y.toFixed(2)); lab.setAttribute('class','cat-label');
+        lab.setAttribute('text-anchor',(Math.abs(Math.cos(theta))<0.3)?'middle':(Math.cos(theta)>0?'start':'end'));
+        lab.setAttribute('dominant-baseline',(Math.sin(theta)>0.3)?'hanging':(Math.sin(theta)<-0.3?'baseline':'middle'));
+        lab.textContent=categories[i]; labelsG.appendChild(lab);
+
+        const hv=values[i], hp=pointOnCircle(theta,valueToRadius(hv));
+        const handle=document.createElementNS('http://www.w3.org/2000/svg','circle');
+        handle.setAttribute('cx',hp.x.toFixed(2)); handle.setAttribute('cy',hp.y.toFixed(2)); handle.setAttribute('r',8);
+        handle.setAttribute('data-index',i); handle.setAttribute('class','handle'); handlesG.appendChild(handle);
+      }
+
+      buildBands(); updateBands(); updateLegend(); updateStats(); buildPlansPanel(); buildHistoryTable();
+      buildA11yControls(); refreshHistoryControls(); drawHistoryCharts(); updateDeltaTable();
+    }
+
+    function buildBands(){
+      const count=categories.length;
+      for(let i=0;i<count;i++){
+        const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+        g.setAttribute('class','category-bands'); g.setAttribute('data-index',i); bandsG.appendChild(g);
+      }
+    }
+
+    // (5) Annular sector path with dynamic large-arc flag for correctness
+    function annularSectorPath(r0,r1,start,end){
+      const sweep = end - start;
+      const LAF = (Math.abs(sweep) > Math.PI) ? 1 : 0; // large arc if > 180°
+      const pSi=pointOnCircle(start,r0), pEi=pointOnCircle(end,r0), pEo=pointOnCircle(end,r1), pSo=pointOnCircle(start,r1);
+      if(r0 < 0.0001){
+        // sector from center
+        return `M ${CX} ${CY} L ${pSo.x.toFixed(2)} ${pSo.y.toFixed(2)} A ${r1.toFixed(2)} ${r1.toFixed(2)} 0 ${LAF} 1 ${pEo.x.toFixed(2)} ${pEo.y.toFixed(2)} Z`;
+      }
+      // ring segment
+      return `M ${pSo.x.toFixed(2)} ${pSo.y.toFixed(2)} A ${r1.toFixed(2)} ${r1.toFixed(2)} 0 ${LAF} 1 ${pEo.x.toFixed(2)} ${pEo.y.toFixed(2)} L ${pEi.x.toFixed(2)} ${pEi.y.toFixed(2)} A ${r0.toFixed(2)} ${r0.toFixed(2)} 0 ${LAF} 0 ${pSi.x.toFixed(2)} ${pSi.y.toFixed(2)} Z`;
+    }
+
+    function bandColor(hue, bandIndex){ const s=SAT_MIN + (bandIndex/MAX_VALUE)*(SAT_MAX-SAT_MIN); return hslToHex(hue, s, LIGHTNESS); }
+    function updateBands(){
+      const count=categories.length, step=stepAngle(count);
+      for(let i=0;i<count;i++){
+        const group=bandsG.querySelector(`.category-bands[data-index="${i}"]`); group.innerHTML='';
+        const thetaCenter=angleForIndex(i,count), start=thetaCenter - step/2, end=thetaCenter + step/2;
+        const v=values[i], full=Math.floor(v), frac=v-full, hue=paletteHues[i];
+        for(let j=0;j<full;j++){
+          const r0=j*BAND_THICKNESS, r1=(j+1)*BAND_THICKNESS;
+          const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+          path.setAttribute('class','band'); path.setAttribute('d', annularSectorPath(r0,r1,start,end)); path.setAttribute('fill', bandColor(hue, j+1));
+          group.appendChild(path);
+        }
+        if(frac>0){
+          const r0=full*BAND_THICKNESS, r1=r0 + frac*BAND_THICKNESS;
+          const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+          path.setAttribute('class','band'); path.setAttribute('d', annularSectorPath(r0,r1,start,end)); path.setAttribute('fill', bandColor(hue, full+1));
+          group.appendChild(path);
+        }
+      }
+    }
+
+    function updateLegend(){
+      legendEl.innerHTML='';
+      for(let i=0;i<categories.length;i++){
+        const row=document.createElement('div'); row.className='row';
+        const sw=document.createElement('div'); sw.className='swatch'; sw.style.background = bandColor(paletteHues[i], MAX_VALUE);
+        const nm=document.createElement('div'); nm.className='name'; nm.textContent=categories[i];
+        const val=document.createElement('div'); val.className='val'; val.textContent=values[i].toFixed(1);
+        row.appendChild(sw); row.appendChild(nm); row.appendChild(val); legendEl.appendChild(row);
+      }
+    }
+    function updateStats(){
+      const avg=arrayAvg(values), std=arrayStd(values);
+      document.getElementById('avgVal').textContent=avg.toFixed(1);
+      document.getElementById('minVal').textContent=Math.min(...values).toFixed(1);
+      document.getElementById('maxVal').textContent=Math.max(...values).toFixed(1);
+      document.getElementById('stdVal').textContent=std.toFixed(2);
+    }
+
+    /* ---------- Interaction ---------- */
+    function nearestAxisIndex(theta){
+      const count=categories.length; let best=0, bestDiff=Infinity;
+      for(let i=0;i<count;i++){
+        const a=angleForIndex(i,count); const diff=Math.abs(Math.atan2(Math.sin(theta-a), Math.cos(theta-a)));
+        if(diff<bestDiff){ bestDiff=diff; best=i; }
+      }
+      return best;
+    }
+    function onOverlayPointerDown(e){
+      overlayEl.setPointerCapture(e.pointerId); pointerId=e.pointerId;
+      const pt=clientToSvg(e.clientX,e.clientY), dx=pt.x-CX, dy=pt.y-CY, theta=Math.atan2(dy,dx), r=Math.sqrt(dx*dx+dy*dy);
+      const index=nearestAxisIndex(theta); const newVal=radiusToValue(clamp(r,0,RADIUS));
+      setValue(index, newVal, {announce:true}); draggingIndex=index;
+    }
+    function onOverlayPointerMove(e){
+      if(draggingIndex===null || e.pointerId!==pointerId) return;
+      const pt=clientToSvg(e.clientX,e.clientY), dx=pt.x-CX, dy=pt.y-CY, r=Math.sqrt(dx*dx+dy*dy);
+      setValue(draggingIndex, radiusToValue(clamp(r,0,RADIUS)));
+    }
+    function onOverlayPointerUp(e){ if(e.pointerId===pointerId){ overlayEl.releasePointerCapture(e.pointerId); draggingIndex=null; pointerId=null; saveLocal(); } }
+    function onHandlePointerDown(e){ const idx=parseInt(e.target.getAttribute('data-index'),10); handlesG.setPointerCapture(e.pointerId); pointerId=e.pointerId; draggingIndex=idx; }
+    function onHandlePointerMove(e){
+      if(draggingIndex===null || e.pointerId!==pointerId) return;
+      const pt=clientToSvg(e.clientX,e.clientY), dx=pt.x-CX, dy=pt.y-CY, r=Math.sqrt(dx*dx+dy*dy);
+      setValue(draggingIndex, radiusToValue(clamp(r,0,RADIUS)));
+    }
+    function onHandlePointerUp(e){ if(e.pointerId===pointerId){ handlesG.releasePointerCapture(e.pointerId); draggingIndex=null; pointerId=null; saveLocal(); } }
+    function clientToSvg(x,y){ const p=svgEl.createSVGPoint(); p.x=x; p.y=y; const m=svgEl.getScreenCTM(); return p.matrixTransform(m.inverse()); }
+
+    function setValue(i, v, opts={}){
+      const snapped=roundTo(v, STEP_FINE); values[i]=snapped;
+      updateBands(); moveHandlesToValues(); updateLegend(); updateStats(); buildPlansPanel();
+      drawHistoryCharts(); updateDeltaTable();
+      if(opts.announce) announce(`${categories[i]} set to ${values[i].toFixed(1)} of 10.`);
+    }
+    function moveHandlesToValues(){
+      const count=categories.length, handles=handlesG.querySelectorAll('.handle');
+      handles.forEach((h,i)=>{ const th=angleForIndex(i,count); const p=pointOnCircle(th, valueToRadius(values[i])); h.setAttribute('cx',p.x.toFixed(2)); h.setAttribute('cy',p.y.toFixed(2)); });
+    }
+    function buildA11yControls(){
+      legendEl.querySelectorAll('.row').forEach((row,i)=>{
+        row.setAttribute('tabindex','0'); row.setAttribute('role','slider'); row.setAttribute('aria-valuemin','0'); row.setAttribute('aria-valuemax','10');
+        row.setAttribute('aria-valuenow', values[i].toFixed(1)); row.setAttribute('aria-label', `${categories[i]} score`);
+        row.addEventListener('keydown',(e)=>{
+          if(e.key==='ArrowRight'||e.key==='ArrowUp'){ setValue(i, clamp(roundTo(values[i]+STEP_FINE,STEP_FINE),0,MAX_VALUE), {announce:true}); row.setAttribute('aria-valuenow', values[i].toFixed(1)); e.preventDefault(); }
+          else if(e.key==='ArrowLeft'||e.key==='ArrowDown'){ setValue(i, clamp(roundTo(values[i]-STEP_FINE,STEP_FINE),0,MAX_VALUE), {announce:true}); row.setAttribute('aria-valuenow', values[i].toFixed(1)); e.preventDefault(); }
+          else if(e.key==='PageUp'){ setValue(i, clamp(roundTo(values[i]+STEP_COARSE,STEP_FINE),0,MAX_VALUE), {announce:true}); row.setAttribute('aria-valuenow', values[i].toFixed(1)); e.preventDefault(); }
+          else if(e.key==='PageDown'){ setValue(i, clamp(roundTo(values[i]-STEP_COARSE,STEP_FINE),0,MAX_VALUE), {announce:true}); row.setAttribute('aria-valuenow', values[i].toFixed(1)); e.preventDefault(); }
+          else if(e.key==='Home'){ setValue(i, 0, {announce:true}); row.setAttribute('aria-valuenow', values[i].toFixed(1)); e.preventDefault(); }
+          else if(e.key==='End'){ setValue(i, 10, {announce:true}); row.setAttribute('aria-valuenow', values[i].toFixed(1)); e.preventDefault(); }
+        });
+      });
+    }
+    function announce(msg){ liveRegion.textContent=msg; }
+
+    /* ---------- Action Plans ---------- */
+    function buildPlansPanel(){
+      const panel=document.getElementById('plansPanel'); if(!panel) return;
+      panel.innerHTML='';
+      for(let i=0;i<categories.length;i++){
+        const row=document.createElement('div'); row.className='plan-row';
+        const head=document.createElement('div'); head.className='plan-head';
+        const title=document.createElement('div'); title.className='plan-title'; title.textContent=categories[i];
+        const score=document.createElement('div'); score.className='plan-score'; score.textContent=values[i].toFixed(1);
+        head.appendChild(title); head.appendChild(score);
+
+        const disabledCount=disabledCountForValue(values[i]), enabledCount=MAX_VALUE-disabledCount;
+        const stepsHeader=document.createElement('div'); stepsHeader.className='steps-header';
+        stepsHeader.textContent=`Steps to write: ${enabledCount} (current score disables ${disabledCount} of 10)`;
+
+        const grid=document.createElement('div'); grid.className='steps-grid';
+        if(!Array.isArray(steps[i]) || steps[i].length!==MAX_VALUE){ steps[i]=new Array(MAX_VALUE).fill(''); }
+        for(let j=0;j<MAX_VALUE;j++){
+          const wrap=document.createElement('div'); wrap.className='step-wrap';
+          const label=document.createElement('div'); label.className='step-label'; label.textContent=`Step ${j+1}`;
+          const input=document.createElement('input'); input.type='text'; input.className='step'; input.placeholder=`Plan for level ${j+1}`; input.value=steps[i][j]||'';
+          const isDisabled = j < disabledCount; if(isDisabled) input.setAttribute('disabled','true'); else input.removeAttribute('disabled');
+          input.addEventListener('input',()=>{ steps[i][j]=input.value; saveLocal(); });
+          wrap.appendChild(label); wrap.appendChild(input); grid.appendChild(wrap);
+        }
+
+        row.appendChild(head); row.appendChild(stepsHeader); row.appendChild(grid); panel.appendChild(row);
+      }
+    }
+
+    /* ---------- Snapshots ---------- */
+    function takeSnapshot(){
+      const snap={ ts:Date.now(), categories:[...categories], values: values.map(v=> roundTo(v, STEP_FINE)) };
+      snapshots.push(snap); saveSnapshots(); buildHistoryTable(); refreshHistoryControls(); drawHistoryCharts(); updateDeltaTable(); announce('Snapshot saved.');
+    }
+    function buildHistoryTable(){
+      const tbody=document.querySelector('#historyTable tbody'); if(!tbody) return;
+      tbody.innerHTML='';
+      snapshots.slice().sort((a,b)=>a.ts-b.ts).forEach(snap=>{
+        const tr=document.createElement('tr');
+        const tdDate=document.createElement('td'); tdDate.textContent=fmtDate(snap.ts);
+        const avg=arrayAvg(snap.values), std=arrayStd(snap.values);
+        const tdAvg=document.createElement('td'); tdAvg.textContent=avg.toFixed(1);
+        const tdStd=document.createElement('td'); tdStd.textContent=std.toFixed(2);
+        const tdCats=document.createElement('td'); tdCats.textContent=`${snap.categories.length} categories`;
+        const tdAct=document.createElement('td'); const del=document.createElement('button'); del.className='btn danger'; del.textContent='Delete';
+        del.addEventListener('click',()=>{ const i=snapshots.findIndex(s=>s.ts===snap.ts); if(i>-1){ snapshots.splice(i,1); saveSnapshots(); buildHistoryTable(); refreshHistoryControls(); drawHistoryCharts(); updateDeltaTable(); } });
+        tdAct.appendChild(del);
+        tr.appendChild(tdDate); tr.appendChild(tdAvg); tr.appendChild(tdStd); tr.appendChild(tdCats); tr.appendChild(tdAct);
+        tbody.appendChild(tr);
+      });
+    }
+
+    function exportSnapshots(){
+      const blob=new Blob([JSON.stringify({snapshots},null,2)],{type:'application/json'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='wheel-of-life-snapshots.json'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    }
+    function importSnapshots(file){
+      const reader=new FileReader();
+      reader.onload=()=>{
+        try{
+          const obj=JSON.parse(reader.result);
+          if(!obj.snapshots||!Array.isArray(obj.snapshots)) throw new Error('Invalid snapshot file');
+          snapshots=obj.snapshots.map(s=>({ ts:s.ts, categories:s.categories, values:s.values.map(v=> roundTo(v, STEP_FINE)) }));
+          saveSnapshots(); buildHistoryTable(); refreshHistoryControls(); drawHistoryCharts(); updateDeltaTable();
+        }catch(e){ alert('Could not import snapshots: '+e.message); }
+      };
+      reader.readAsText(file);
+    }
+
+    /* ---------- Export current wheel ---------- */
+    function svgInlineStyle(){
+      return `.ring{stroke:#29305a;fill:none}.axis{stroke:#34406f;stroke-width:1.25}.tick{stroke:#2f3967;stroke-width:.9}.cat-label{font-size:12px;fill:#b9c2ff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}.handle{fill:#ffd166;stroke:#2d244f;stroke-width:2}.center-dot{fill:#8fd3ff;opacity:.7}.overlay{fill:transparent}.band{stroke:#2a325b;stroke-width:.6;stroke-linejoin:round}`;
+    }
+    function exportPNG(){
+      const clone=svgEl.cloneNode(true);
+      const style=document.createElementNS('http://www.w3.org/2000/svg','style'); style.setAttribute('type','text/css'); style.textContent=svgInlineStyle();
+      const defs=clone.querySelector('defs'); if(defs){ defs.parentNode.insertBefore(style, defs.nextSibling); } else { clone.insertBefore(style, clone.firstChild); }
+      const serializer=new XMLSerializer(); let svgStr=serializer.serializeToString(clone);
+      if(!svgStr.includes('xmlns="http://www.w3.org/2000/svg"')) svgStr=svgStr.replace('<svg','<svg xmlns="http://www.w3.org/2000/svg"');
+      const url='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgStr);
+      const canvas=document.createElement('canvas'); canvas.width=SIZE; canvas.height=SIZE; const ctx=canvas.getContext('2d');
+      const img=new Image(); img.onload=()=>{ ctx.clearRect(0,0,SIZE,SIZE); ctx.drawImage(img,0,0,SIZE,SIZE); const png=canvas.toDataURL('image/png'); const a=document.createElement('a'); a.href=png; const d=new Date().toISOString().slice(0,19).replace(/[:T]/g,'-'); a.download=`wheel-of-life-${d}.png`; document.body.appendChild(a); a.click(); a.remove(); };
+      img.onerror=()=>alert('Export failed: browser blocked inline SVG rasterization.'); img.src=url;
+    }
+
+    /* ---------- Category modal ---------- */
+    const modalOverlay=document.getElementById('modalOverlay');
+    function openModal(){ modalOverlay.style.display='grid'; modalOverlay.setAttribute('aria-hidden','false'); buildEditList(); }
+    function closeModal(){ modalOverlay.style.display='none'; modalOverlay.setAttribute('aria-hidden','true'); }
+    document.getElementById('btnEditCats').addEventListener('click', openModal);
+    document.getElementById('btnCloseModal').addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click',(e)=>{ if(e.target===modalOverlay) closeModal(); });
+
+    function buildEditList(){
+      const list=document.getElementById('editList'); list.innerHTML='';
+      for(let i=0;i<categories.length;i++){
+        const row=document.createElement('div'); row.className='edit-row';
+        const drag=document.createElement('span'); drag.textContent='↕'; drag.title='Use ↑ ↓ buttons to reorder'; drag.style.opacity='0.6';
+        const input=document.createElement('input'); input.type='text'; input.value=categories[i];
+        input.addEventListener('change',()=>{ categories[i]=input.value || `Category ${i+1}`; saveLocal(); drawBase(); });
+        const controls=document.createElement('div'); controls.style.display='flex'; controls.style.gap='6px';
+        const up=document.createElement('button'); up.className='btn'; up.textContent='↑'; up.addEventListener('click',()=>{ if(i===0) return; swapCategory(i,i-1); });
+        const down=document.createElement('button'); down.className='btn'; down.textContent='↓'; down.addEventListener('click',()=>{ if(i===categories.length-1) return; swapCategory(i,i+1); });
+        const del=document.createElement('button'); del.className='btn danger'; del.textContent='Delete'; del.addEventListener('click',()=>{ categories.splice(i,1); values.splice(i,1); notes.splice(i,1); steps.splice(i,1); saveLocal(); drawBase(); buildEditList(); });
+        controls.appendChild(up); controls.appendChild(down); controls.appendChild(del);
+        row.appendChild(drag); row.appendChild(input); row.appendChild(controls); list.appendChild(row);
+      }
+    }
+    function swapCategory(a,b){ [categories[a],categories[b]]=[categories[b],categories[a]]; [values[a],values[b]]=[values[b],values[a]]; [notes[a],notes[b]]=[notes[b],notes[a]]; [steps[a],steps[b]]=[steps[b],steps[a]]; saveLocal(); drawBase(); }
+
+    // (4) Wire modal actions: Add Category & Reset to Defaults
+    document.getElementById('btnAddCategory').addEventListener('click', () => {
+      const nextIndex = categories.length;
+      categories.push(`Category ${nextIndex + 1}`);
+      values.push(5);
+      notes.push('');
+      steps.push(new Array(10).fill(''));
+      saveLocal();
+      drawBase();
+      buildEditList();
+    });
+    document.getElementById('btnResetCategories').addEventListener('click', () => {
+      if (!confirm('Reset categories to defaults? This will overwrite names and reset scores to 5.')) return;
+      categories = [...DEFAULT_CATEGORIES];
+      values = new Array(categories.length).fill(5);
+      notes = new Array(categories.length).fill('');
+      steps = new Array(categories.length).fill(null).map(() => new Array(10).fill(''));
+      saveLocal();
+      drawBase();
+      buildEditList();
+    });
+
+    /* ---------- History charts ---------- */
+    const sigmaChartEl=document.getElementById('sigmaChart'),
+          categoryChartsEl=document.getElementById('categoryCharts'),
+          avgSigmaChartEl=document.getElementById('avgSigmaChart'),
+          baselineSelectEl=document.getElementById('baselineSelect'),
+          maToggleEl=document.getElementById('maToggle'),
+          maWindowEl=document.getElementById('maWindow'),
+          targetAvgEl=document.getElementById('targetAvg'),
+          targetSigmaEl=document.getElementById('targetSigma'),
+          isoToggleEl=document.getElementById('isoToggle');
+
+    function refreshHistoryControls(){
+      baselineSelectEl.innerHTML='';
+      const snaps=snapshots.slice().sort((a,b)=>a.ts-b.ts);
+      if(snaps.length===0){
+        const opt=document.createElement('option'); opt.value=''; opt.textContent='No snapshots'; baselineSelectEl.appendChild(opt); baselineSelectEl.disabled=true;
+      } else {
+        baselineSelectEl.disabled=false;
+        snaps.forEach((s,idx)=>{ const opt=document.createElement('option'); opt.value=s.ts.toString(); opt.textContent=`${idx+1}. ${fmtDate(s.ts)}`; baselineSelectEl.appendChild(opt); });
+        baselineSelectEl.value=snaps[0].ts.toString();
+      }
+    }
+
+    function seriesMA(series, windowSize){
+      const arr=series.map(p=>p.y); const ma=[];
+      for(let i=0;i<arr.length;i++){
+        let count=0,sum=0;
+        for(let j=i-windowSize+1;j<=i;j++){ if(j>=0 && arr[j]!=null){ sum+=arr[j]; count++; } }
+        ma.push(count>0 ? sum/count : null);
+      }
+      return series.map((p,i)=>({x:p.x,y:ma[i]}));
+    }
+    function pathFromSeries(series, xScale, yScale){
+      let d='', pen=false;
+      series.forEach(p=>{
+        if(p.y==null){ pen=false; return; }
+        const x=xScale(p.x), y=yScale(p.y);
+        if(!pen){ d+=`M ${x} ${y} `; pen=true; } else { d+=`L ${x} ${y} `; }
+      });
+      return d.trim();
+    }
+
+    function drawSigmaChart(){
+      sigmaChartEl.innerHTML='';
+      const svgNS='http://www.w3.org/2000/svg';
+      const width=sigmaChartEl.clientWidth||800, height=(sigmaChartEl.clientHeight||(width*9/16));
+      const svg=document.createElementNS(svgNS,'svg'); svg.setAttribute('viewBox',`0 0 ${width} ${height}`); svg.setAttribute('width','100%'); svg.setAttribute('height','100%');
+
+      const snaps=snapshots.slice().sort((a,b)=>a.ts-b.ts);
+      const series=snaps.map(s=>({x:s.ts, y: arrayStd(s.values)}));
+      if(series.length===0){ const text=document.createElementNS(svgNS,'text'); text.textContent='No snapshots yet.'; text.setAttribute('x',width/2); text.setAttribute('y',height/2); text.setAttribute('dominant-baseline','middle'); text.setAttribute('text-anchor','middle'); text.setAttribute('fill','#b9c2ff'); svg.appendChild(text); sigmaChartEl.appendChild(svg); return; }
+
+      const margin={top:20,right:20,bottom:30,left:40};
+      const xMin=series[0].x, xMax=series[series.length-1].x;
+      const yMax=Math.max(...series.map(p=>p.y), 1);
+
+      const xScale=(x)=>{ const w=width-margin.left-margin.right; return margin.left + ((x-xMin)/(xMax-xMin || 1))*w; };
+      const yScale=(y)=>{ const h=height-margin.top-margin.bottom; return margin.top + (1-(y/(yMax||1)))*h; };
+
+      const gGrid=document.createElementNS(svgNS,'g');
+      for(let t=0;t<=5;t++){ const y=yScale((yMax/5)*t); const L=document.createElementNS(svgNS,'line'); L.setAttribute('x1',margin.left); L.setAttribute('x2',width-margin.right); L.setAttribute('y1',y); L.setAttribute('y2',y); L.setAttribute('class','gridline'); gGrid.appendChild(L); }
+      svg.appendChild(gGrid);
+
+      const axisX=document.createElementNS(svgNS,'line'); axisX.setAttribute('x1',margin.left); axisX.setAttribute('x2',width-margin.right); axisX.setAttribute('y1',height-margin.bottom); axisX.setAttribute('y2',height-margin.bottom); axisX.setAttribute('class','axis-line'); svg.appendChild(axisX);
+      const axisY=document.createElementNS(svgNS,'line'); axisY.setAttribute('x1',margin.left); axisY.setAttribute('x2',margin.left); axisY.setAttribute('y1',margin.top); axisY.setAttribute('y2',height-margin.bottom); axisY.setAttribute('class','axis-line'); svg.appendChild(axisY);
+
+      const gXT=document.createElementNS(svgNS,'g'); const tickCount=Math.min(6,series.length);
+      for(let i=0;i<tickCount;i++){ const idx=Math.round((i/(tickCount-1))*(series.length-1)); const x=xScale(series[idx].x), y=height-margin.bottom;
+        const t=document.createElementNS(svgNS,'line'); t.setAttribute('x1',x); t.setAttribute('x2',x); t.setAttribute('y1',y); t.setAttribute('y2',y+6); t.setAttribute('class','axis-line'); gXT.appendChild(t);
+        const lab=document.createElementNS(svgNS,'text'); lab.textContent=new Date(series[idx].x).toLocaleDateString(); lab.setAttribute('x',x); lab.setAttribute('y',y+18); lab.setAttribute('fill','#b9c2ff'); lab.setAttribute('font-size','12'); lab.setAttribute('text-anchor','middle'); gXT.appendChild(lab);
+      }
+      svg.appendChild(gXT);
+
+      const gYT=document.createElementNS(svgNS,'g');
+      for(let i=0;i<=5;i++){ const val=(yMax/5)*i; const x=margin.left, y=yScale(val);
+        const t=document.createElementNS(svgNS,'line'); t.setAttribute('x1',x-6); t.setAttribute('x2',x); t.setAttribute('y1',y); t.setAttribute('y2',y); t.setAttribute('class','axis-line'); gYT.appendChild(t);
+        const lab=document.createElementNS(svgNS,'text'); lab.textContent=val.toFixed(2); lab.setAttribute('x',x-8); lab.setAttribute('y',y+4); lab.setAttribute('fill','#b9c2ff'); lab.setAttribute('font-size','11'); lab.setAttribute('text-anchor','end'); gYT.appendChild(lab);
+      }
+      svg.appendChild(gYT);
+
+      const path=document.createElementNS(svgNS,'path'); path.setAttribute('class','series-line'); path.setAttribute('d', pathFromSeries(series,xScale,yScale)); svg.appendChild(path);
+
+      if(maToggleEl.checked){ const win=parseInt(maWindowEl.value,10)||3; const maSeries=seriesMA(series,win); const maPath=document.createElementNS(svgNS,'path'); maPath.setAttribute('class','ma-line'); maPath.setAttribute('d', pathFromSeries(maSeries,xScale,yScale)); svg.appendChild(maPath); }
+
+      sigmaChartEl.appendChild(svg);
+    }
+
+    function drawAvgSigmaChart(){
+      avgSigmaChartEl.innerHTML='';
+      const svgNS='http://www.w3.org/2000/svg';
+      const width=avgSigmaChartEl.clientWidth||800, height=(avgSigmaChartEl.clientHeight||(width*9/16));
+      const svg=document.createElementNS(svgNS,'svg'); svg.setAttribute('viewBox',`0 0 ${width} ${height}`); svg.setAttribute('width','100%'); svg.setAttribute('height','100%');
+
+      const snaps=snapshots.slice().sort((a,b)=>a.ts-b.ts);
+      if(snaps.length===0){ const text=document.createElementNS(svgNS,'text'); text.textContent='No snapshots yet.'; text.setAttribute('x',width/2); text.setAttribute('y',height/2); text.setAttribute('dominant-baseline','middle'); text.setAttribute('text-anchor','middle'); text.setAttribute('fill','#b9c2ff'); svg.appendChild(text); avgSigmaChartEl.appendChild(svg); return; }
+
+      const margin={top:20,right:20,bottom:30,left:40};
+      const xScale=(A)=>{ const w=width-margin.left-margin.right; return margin.left + (A/10)*w; };
+      const yScale=(S)=>{ const h=height-margin.top-margin.bottom; return margin.top + (1-(S/5))*h; };
+
+      // Grid: vertical every 2, horizontal every 1
+      const gGrid=document.createElementNS(svgNS,'g');
+      for(let A=0; A<=10; A+=2){ const x=xScale(A); const L=document.createElementNS(svgNS,'line'); L.setAttribute('x1',x); L.setAttribute('x2',x); L.setAttribute('y1',margin.top); L.setAttribute('y2',height-margin.bottom); L.setAttribute('class','gridline'); gGrid.appendChild(L); }
+      for(let S=0; S<=5; S+=1){ const y=yScale(S); const L=document.createElementNS(svgNS,'line'); L.setAttribute('x1',margin.left); L.setAttribute('x2',width-margin.right); L.setAttribute('y1',y); L.setAttribute('y2',y); L.setAttribute('class','gridline'); gGrid.appendChild(L); }
+      svg.appendChild(gGrid);
+
+      // Axes
+      const axisX=document.createElementNS(svgNS,'line'); axisX.setAttribute('x1',margin.left); axisX.setAttribute('x2',width-margin.right); axisX.setAttribute('y1',height-margin.bottom); axisX.setAttribute('y2',height-margin.bottom); axisX.setAttribute('class','axis-line'); svg.appendChild(axisX);
+      const axisY=document.createElementNS(svgNS,'line'); axisY.setAttribute('x1',margin.left); axisY.setAttribute('x2',margin.left); axisY.setAttribute('y1',margin.top); axisY.setAttribute('y2',height-margin.bottom); axisY.setAttribute('class','axis-line'); svg.appendChild(axisY);
+      // Axis labels
+      const xLab=document.createElementNS(svgNS,'text'); xLab.textContent='Average (0–10)'; xLab.setAttribute('x',(width)/2); xLab.setAttribute('y',height-6); xLab.setAttribute('fill','#b9c2ff'); xLab.setAttribute('font-size','12'); xLab.setAttribute('text-anchor','middle'); svg.appendChild(xLab);
+      const yLab=document.createElementNS(svgNS,'text'); yLab.textContent='Balance (σ, 0–5)'; yLab.setAttribute('x',12); yLab.setAttribute('y',margin.top+12); yLab.setAttribute('fill','#b9c2ff'); yLab.setAttribute('font-size','12'); svg.appendChild(yLab);
+
+      // Target zone shading
+      const targetAvg=parseFloat(targetAvgEl.value)||7, targetSigma=parseFloat(targetSigmaEl.value)||1.5;
+      const zoneX=xScale(targetAvg), zoneY=yScale(targetSigma);
+      const zoneRect=document.createElementNS(svgNS,'rect');
+      zoneRect.setAttribute('x',zoneX); zoneRect.setAttribute('y',margin.top);
+      zoneRect.setAttribute('width',(width-margin.right)-zoneX);
+      zoneRect.setAttribute('height',(height-margin.bottom)-margin.top);
+      zoneRect.setAttribute('fill', 'rgba(76,175,80,0.12)');
+      zoneRect.setAttribute('stroke', '#4caf50');
+      zoneRect.setAttribute('stroke-width', '1');
+      svg.appendChild(zoneRect);
+      // Horizontal bound at target σ
+      const boundLine=document.createElementNS(svgNS,'line'); boundLine.setAttribute('x1',margin.left); boundLine.setAttribute('x2',width-margin.right); boundLine.setAttribute('y1',zoneY); boundLine.setAttribute('y2',zoneY); boundLine.setAttribute('stroke','#4caf50'); boundLine.setAttribute('stroke-dasharray','4,3'); svg.appendChild(boundLine);
+
+      // (6) Iso-lines for BAA with reliable colors (resolve CSS var)
+      const isoColor = getComputedStyle(document.documentElement).getPropertyValue('--isolines').trim() || '#d1b3ff';
+      if(isoToggleEl.checked){
+        const isoQs=[3,5,7];
+        isoQs.forEach(q=>{
+          let d=''; let pen=false;
+          for(let A=0.5; A<=10; A+=0.1){
+            const S=5*(1 - (q/A)); if(S<0 || S>5) continue;
+            const x=xScale(A), y=yScale(S);
+            if(!pen){ d+=`M ${x} ${y} `; pen=true; } else { d+=`L ${x} ${y} `; }
+          }
+          const path=document.createElementNS(svgNS,'path'); path.setAttribute('d',d.trim()); path.setAttribute('fill','none'); path.setAttribute('stroke', isoColor); path.setAttribute('stroke-width','1.2'); path.setAttribute('stroke-dasharray','5,3'); svg.appendChild(path);
+          // label near right end
+          const lx=xScale(9.8), ly=yScale(5*(1-(q/9.8))); const lbl=document.createElementNS(svgNS,'text'); lbl.textContent=`BAA=${q}`; lbl.setAttribute('x',lx); lbl.setAttribute('y',ly-4); lbl.setAttribute('fill', isoColor); lbl.setAttribute('font-size','11'); lbl.setAttribute('text-anchor','end'); svg.appendChild(lbl);
+        });
+      }
+
+      // Points
+      const points=snaps.map(s=>({ A: arrayAvg(s.values), S: arrayStd(s.values), ts:s.ts }));
+      points.forEach(p=>{
+        const dot=document.createElementNS(svgNS,'circle'); dot.setAttribute('cx', xScale(p.A)); dot.setAttribute('cy', yScale(p.S)); dot.setAttribute('r','3'); dot.setAttribute('fill','#8fd3ff'); dot.setAttribute('stroke','#202642'); dot.setAttribute('stroke-width','0.8');
+        const title=document.createElementNS(svgNS,'title'); title.textContent=`${fmtDate(p.ts)}  A=${p.A.toFixed(1)}  σ=${p.S.toFixed(2)}`; dot.appendChild(title);
+        svg.appendChild(dot);
+      });
+
+      avgSigmaChartEl.appendChild(svg);
+    }
+
+    function drawCategorySmallMultiples(){
+      categoryChartsEl.innerHTML='';
+      const svgNS='http://www.w3.org/2000/svg';
+      const snaps=snapshots.slice().sort((a,b)=>a.ts-b.ts);
+      const win=parseInt(maWindowEl.value,10)||3, useMA=maToggleEl.checked;
+
+      categories.forEach((cat, idx)=>{
+        const hue=paletteHues[idx], color=bandColor(hue, MAX_VALUE);
+        const card=document.createElement('div'); card.className='chart-card';
+        const title=document.createElement('div'); title.className='chart-title'; title.textContent=cat; card.appendChild(title);
+
+        const svg=document.createElementNS(svgNS,'svg'); svg.setAttribute('class','chart-svg'); svg.setAttribute('role','img'); svg.setAttribute('aria-label',`Trend for ${cat}`);
+        const width=card.clientWidth||550, height=(width*9/16); svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
+
+        const series=snaps.map(s=>{ const idxInSnap=s.categories.indexOf(cat); const y=idxInSnap>-1 ? s.values[idxInSnap] : null; return {x:s.ts, y}; });
+        const margin={top:20,right:20,bottom:30,left:40};
+        const xMin=series.length?series[0].x:Date.now(), xMax=series.length?series[series.length-1].x:Date.now();
+        const xScale=(x)=>{ const w=width-margin.left-margin.right; return margin.left + ((x-xMin)/(xMax-xMin||1))*w; };
+        const yScale=(y)=>{ const h=height-margin.top-margin.bottom; return margin.top + (1-((y||0)/10))*h; };
+
+        const gGrid=document.createElementNS(svgNS,'g');
+        for(let t=0;t<=10;t+=2){ const y=yScale(t); const L=document.createElementNS(svgNS,'line'); L.setAttribute('x1',margin.left); L.setAttribute('x2',width-margin.right); L.setAttribute('y1',y); L.setAttribute('y2',y); L.setAttribute('class','gridline'); gGrid.appendChild(L); }
+        svg.appendChild(gGrid);
+
+        const axisX=document.createElementNS(svgNS,'line'); axisX.setAttribute('x1',margin.left); axisX.setAttribute('x2',width-margin.right); axisX.setAttribute('y1',height-margin.bottom); axisX.setAttribute('y2',height-margin.bottom); axisX.setAttribute('class','axis-line'); svg.appendChild(axisX);
+        const axisY=document.createElementNS(svgNS,'line'); axisY.setAttribute('x1',margin.left); axisY.setAttribute('x2',margin.left); axisY.setAttribute('y1',margin.top); axisY.setAttribute('y2',height-margin.bottom); axisY.setAttribute('class','axis-line'); svg.appendChild(axisY);
+
+        const gXT=document.createElementNS(svgNS,'g'); const tickCount=Math.min(5, series.length||1);
+        for(let i=0;i<tickCount;i++){ const idxTick=Math.round((i/(tickCount-1))*(series.length-1)); const x=xScale(series[idxTick].x), y=height-margin.bottom;
+          const t=document.createElementNS(svgNS,'line'); t.setAttribute('x1',x); t.setAttribute('x2',x); t.setAttribute('y1',y); t.setAttribute('y2',y+6); t.setAttribute('class','axis-line'); gXT.appendChild(t);
+          const lab=document.createElementNS(svgNS,'text'); lab.textContent=new Date(series[idxTick].x).toLocaleDateString(); lab.setAttribute('x',x); lab.setAttribute('y',y+18); lab.setAttribute('fill','#b9c2ff'); lab.setAttribute('font-size','12'); lab.setAttribute('text-anchor','middle'); gXT.appendChild(lab);
+        }
+        svg.appendChild(gXT);
+
+        const gYT=document.createElementNS(svgNS,'g');
+        for(let t=0;t<=10;t+=2){ const x=margin.left, y=yScale(t);
+          const tk=document.createElementNS(svgNS,'line'); tk.setAttribute('x1',x-6); tk.setAttribute('x2',x); tk.setAttribute('y1',y); tk.setAttribute('y2',y); tk.setAttribute('class','axis-line'); gYT.appendChild(tk);
+          const lab=document.createElementNS(svgNS,'text'); lab.textContent=t.toFixed(0); lab.setAttribute('x',x-8); lab.setAttribute('y',y+4); lab.setAttribute('fill','#b9c2ff'); lab.setAttribute('font-size','11'); lab.setAttribute('text-anchor','end'); gYT.appendChild(lab);
+        }
+        svg.appendChild(gYT);
+
+        const path=document.createElementNS(svgNS,'path'); path.setAttribute('class','series-line'); path.setAttribute('stroke',color); path.setAttribute('d', pathFromSeries(series,xScale,yScale)); svg.appendChild(path);
+        if(useMA){ const maSeries=seriesMA(series,win); const maPath=document.createElementNS(svgNS,'path'); maPath.setAttribute('class','ma-line'); maPath.setAttribute('d', pathFromSeries(maSeries,xScale,yScale)); svg.appendChild(maPath); }
+        series.forEach(p=>{ if(p.y==null) return; const dot=document.createElementNS(svgNS,'circle'); dot.setAttribute('class','dot'); dot.setAttribute('cx',xScale(p.x)); dot.setAttribute('cy',yScale(p.y)); dot.setAttribute('r','2.5'); dot.setAttribute('fill',color); svg.appendChild(dot); });
+
+        card.appendChild(svg); categoryChartsEl.appendChild(card);
+      });
+    }
+
+    /* ---------- Delta table w/ BAA & RII ---------- */
+    function BAA(A,S){ return A * (1 - (S/5)); }          // Balance-Adjusted Average
+    function RII(A,S){ return (A>0) ? (2*S/A) : Infinity; } // Relative Imbalance Index
+
+    function updateDeltaTable(){
+      const tbody=document.querySelector('#deltaTable tbody'); if(!tbody) return;
+      tbody.innerHTML='';
+      const snaps=snapshots.slice().sort((a,b)=>a.ts-b.ts);
+      if(snaps.length<1){ const tr=document.createElement('tr'); const td=document.createElement('td'); td.textContent='No snapshots yet.'; td.colSpan=4; tr.appendChild(td); tbody.appendChild(tr); setOverallDeltas(null,null); return; }
+
+      const latest=snaps[snaps.length-1];
+      const baseTs=baselineSelectEl.value ? parseInt(baselineSelectEl.value,10) : snaps[0].ts;
+      const baseline=snaps.find(s=>s.ts===baseTs) || snaps[0];
+
+      categories.forEach(cat=>{
+        const baseIdx=baseline.categories.indexOf(cat), latestIdx=latest.categories.indexOf(cat);
+        const baseVal=baseIdx>-1 ? baseline.values[baseIdx] : null;
+        const latestVal=latestIdx>-1 ? latest.values[latestIdx] : null;
+        const diff=(baseVal!=null && latestVal!=null) ? (latestVal - baseVal) : null;
+
+        const tr=document.createElement('tr');
+        const tdCat=document.createElement('td'); tdCat.textContent=cat;
+        const tdBase=document.createElement('td'); tdBase.textContent=baseVal!=null ? baseVal.toFixed(1) : '–';
+        const tdLatest=document.createElement('td'); tdLatest.textContent=latestVal!=null ? latestVal.toFixed(1) : '–';
+        const tdDiff=document.createElement('td'); tdDiff.textContent=diff!=null ? (diff>=0?`+${diff.toFixed(1)}`:diff.toFixed(1)) : '–';
+        tr.appendChild(tdCat); tr.appendChild(tdBase); tr.appendChild(tdLatest); tr.appendChild(tdDiff);
+        tbody.appendChild(tr);
+      });
+
+      setOverallDeltas(baseline, latest);
+    }
+
+    function setOverallDeltas(baseline, latest){
+      const avgBaseEl=document.getElementById('deltaAvgBase'), avgLatestEl=document.getElementById('deltaAvgLatest'), avgDiffEl=document.getElementById('deltaAvgDiff');
+      const sigmaBaseEl=document.getElementById('deltaSigmaBase'), sigmaLatestEl=document.getElementById('deltaSigmaLatest'), sigmaDiffEl=document.getElementById('deltaSigmaDiff');
+      const baaBaseEl=document.getElementById('deltaBAABase'), baaLatestEl=document.getElementById('deltaBAALatest'), baaDiffEl=document.getElementById('deltaBAADiff');
+      const riiBaseEl=document.getElementById('deltaRIIBase'), riiLatestEl=document.getElementById('deltaRIILatest'), riiDiffEl=document.getElementById('deltaRIIDiff');
+
+      if(!baseline || !latest){
+        avgBaseEl.textContent=avgLatestEl.textContent=avgDiffEl.textContent='–';
+        sigmaBaseEl.textContent=sigmaLatestEl.textContent=sigmaDiffEl.textContent='–';
+        baaBaseEl.textContent=baaLatestEl.textContent=baaDiffEl.textContent='–';
+        riiBaseEl.textContent=riiLatestEl.textContent=riiDiffEl.textContent='–';
+        return;
+      }
+
+      const A_base=arrayAvg(baseline.values), S_base=arrayStd(baseline.values);
+      const A_latest=arrayAvg(latest.values), S_latest=arrayStd(latest.values);
+      const BAA_base=BAA(A_base,S_base), BAA_latest=BAA(A_latest,S_latest);
+      const RII_base=RII(A_base,S_base), RII_latest=RII(A_latest,S_latest);
+
+      avgBaseEl.textContent=A_base.toFixed(1);
+      avgLatestEl.textContent=A_latest.toFixed(1);
+      const dA=A_latest - A_base; avgDiffEl.textContent=(dA>=0?`+${dA.toFixed(1)}`:dA.toFixed(1));
+
+      sigmaBaseEl.textContent=S_base.toFixed(2);
+      sigmaLatestEl.textContent=S_latest.toFixed(2);
+      const dS=S_latest - S_base; sigmaDiffEl.textContent=(dS>=0?`+${dS.toFixed(2)}`:dS.toFixed(2));
+
+      baaBaseEl.textContent=BAA_base.toFixed(2);
+      baaLatestEl.textContent=BAA_latest.toFixed(2);
+      const dBAA=BAA_latest - BAA_base; baaDiffEl.textContent=(dBAA>=0?`+${dBAA.toFixed(2)}`:dBAA.toFixed(2));
+
+      riiBaseEl.textContent=(Number.isFinite(RII_base)?RII_base.toFixed(2):'∞');
+      riiLatestEl.textContent=(Number.isFinite(RII_latest)?RII_latest.toFixed(2):'∞');
+      const dRII=RII_latest - RII_base; riiDiffEl.textContent=(Number.isFinite(dRII)? (dRII>=0?`+${dRII.toFixed(2)}`:dRII.toFixed(2)) : '–');
+    }
+
+    function drawHistoryCharts(){ drawSigmaChart(); drawAvgSigmaChart(); drawCategorySmallMultiples(); }
+
+    /* ---------- Buttons & tab wiring ---------- */
+    document.getElementById('btnExport').addEventListener('click', exportPNG);
+    document.getElementById('btnSave').addEventListener('click', saveToFile);
+    document.getElementById('btnLoad').addEventListener('click', () => document.getElementById('fileInput').click());
+    document.getElementById('fileInput').addEventListener('change',(e)=>{ const f=e.target.files?.[0]; if(f) loadFromFile(f); e.target.value=''; });
+    document.getElementById('btnSnapshot').addEventListener('click', takeSnapshot);
+    document.getElementById('btnExportSnaps').addEventListener('click', exportSnapshots);
+    document.getElementById('btnImportSnaps').addEventListener('click', () => document.getElementById('snapFileInput').click());
+    document.getElementById('snapFileInput').addEventListener('change',(e)=>{ const f=e.target.files?.[0]; if(f) importSnapshots(f); e.target.value=''; });
+    document.getElementById('btnClearSnaps').addEventListener('click',()=>{ if(!confirm('Clear all snapshots?')) return; snapshots=[]; saveSnapshots(); buildHistoryTable(); refreshHistoryControls(); drawHistoryCharts(); updateDeltaTable(); });
+    function saveToFile(){
+      const blob=new Blob([JSON.stringify({categories,values,notes,steps,savedAt:new Date().toISOString()},null,2)],{type:'application/json'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='wheel-of-life.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    }
+    function loadFromFile(file){
+      const reader=new FileReader();
+      reader.onload=()=>{ try{
+          const obj=JSON.parse(reader.result);
+          if(!obj.categories||!obj.values) throw new Error('Invalid file');
+          categories=obj.categories; values=obj.values.map(v=> roundTo(v, STEP_FINE));
+          notes=obj.notes || new Array(categories.length).fill('');
+          steps=obj.steps && Array.isArray(obj.steps) ? obj.steps.map(arr=> (Array.isArray(arr)? arr.slice(0,10).concat(new Array(Math.max(0,10-(arr.length||0))).fill('')) : new Array(10).fill(''))) : new Array(categories.length).fill(null).map(()=> new Array(10).fill(''));
+          ensureArrayLengths(); saveLocal(); drawBase();
+        }catch(e){ alert('Could not load: '+e.message); } };
+      reader.readAsText(file);
+    }
+    document.getElementById('btnNew').addEventListener('click',()=>{
+      if(!confirm('Start fresh and reset scores to neutral (5)?')) return;
+      values=new Array(categories.length).fill(5);
+      notes=new Array(categories.length).fill('');
+      steps=new Array(categories.length).fill(null).map(()=> new Array(10).fill(''));
+      saveLocal(); drawBase();
+    });
+    document.getElementById('btnPrint').addEventListener('click', () => window.print());
+    document.getElementById('btnFullscreen').addEventListener('click', () =>{ const el=document.documentElement; if(document.fullscreenElement) document.exitFullscreen(); else el.requestFullscreen?.(); });
+
+    baselineSelectEl.addEventListener('change',()=>{ drawHistoryCharts(); updateDeltaTable(); });
+    maToggleEl.addEventListener('change', drawHistoryCharts);
+    maWindowEl.addEventListener('input',()=>{ const v=parseInt(maWindowEl.value,10); if(isNaN(v)||v<2) maWindowEl.value=2; drawHistoryCharts(); });
+    targetAvgEl.addEventListener('input', drawAvgSigmaChart);
+    targetSigmaEl.addEventListener('input', drawAvgSigmaChart);
+    isoToggleEl.addEventListener('change', drawAvgSigmaChart);
+
+    const tabs=document.querySelectorAll('.tab');
+    function setActiveTab(name){
+      tabs.forEach(t=> t.classList.toggle('active', t.dataset.tab===name));
+      document.querySelectorAll('.page').forEach(p=> p.classList.toggle('active', p.id==='page-'+name));
+      if(name==='history'){ buildHistoryTable(); refreshHistoryControls(); drawHistoryCharts(); updateDeltaTable(); }
+      if(name==='actions') buildPlansPanel();
+    }
+    tabs.forEach(t=> t.addEventListener('click', () => setActiveTab(t.dataset.tab)));
+
+    /* ---------- INIT ---------- */
+    function init(){
+      const hadLocal=loadLocal(); loadSnapshots();
+      if(!hadLocal){ values=new Array(categories.length).fill(5); notes=new Array(categories.length).fill(''); steps=new Array(categories.length).fill(null).map(()=> new Array(10).fill('')); }
+      drawBase();
+      overlayEl.addEventListener('pointerdown', onOverlayPointerDown);
+      overlayEl.addEventListener('pointermove', onOverlayPointerMove);
+      overlayEl.addEventListener('pointerup', onOverlayPointerUp);
+      overlayEl.addEventListener('pointerleave', onOverlayPointerUp);
+      handlesG.addEventListener('pointerdown',(e)=>{ if(e.target.classList.contains('handle')) onHandlePointerDown(e); });
+      handlesG.addEventListener('pointermove', onHandlePointerMove);
+      handlesG.addEventListener('pointerup', onHandlePointerUp);
+      handlesG.addEventListener('pointerleave', onHandlePointerUp);
+    }
+    init();
+  </script>
+
+  <!-- Print styles -->
+  <style media="print">
+    header, .tabs, .footer-note,
+    #btnFullscreen, #btnExport, #btnSave, #btnLoad, #btnNew, #btnPrint, #btnEditCats, #btnSnapshot,
+    #modalOverlay { display: none !important; }
+    body { background: #fff !important; color: #000; }
+    .card { box-shadow: none; background: #fff; border-color: #ddd; }
+    .band { stroke: #666; stroke-width: 0.5; }
+    input.step { border-color: #999; background: #fff; color: #000; }
+    .page { display: block !important; }
+  </style>
+</body>
+</html>

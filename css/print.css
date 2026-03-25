@@ -1,0 +1,8 @@
+header, .tabs, .footer-note,
+#btnFullscreen, #btnExport, #btnSave, #btnLoad, #btnNew, #btnPrint, #btnEditCats, #btnSnapshot,
+#modalOverlay { display: none !important; }
+body { background: #fff !important; color: #000; }
+.card { box-shadow: none; background: #fff; border-color: #ddd; }
+.band { stroke: #666; stroke-width: 0.5; }
+input.step { border-color: #999; background: #fff; color: #000; }
+.page { display: block !important; }

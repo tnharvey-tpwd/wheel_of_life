@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Wheel of Life — Interactive Workshop App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg: #0f1320;
+      --surface: #161a2b;
+      --text: #e8ecff;
+      --muted: #b9c2ff;
+      --accent: #6ea8fe;
+      --accent-2:#8fd3ff;
+      --ring: #29305a;
+      --handle: #ffd166;
+      --panel: #0e1330;
+      --border: #202642;
+      --band-stroke: #2a325b;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: radial-gradient(1200px circle at 10% 10%, #0b1020 0%, #0f1320 60%, #0d1224 100%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      line-height: 1.4;
+    }
+
+    header {
+      padding: 16px 24px;
+      display: flex; gap: 12px; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #202642;
+      background: linear-gradient(180deg, rgba(35,44,78,0.2), rgba(10,12,22,0.2));
+      position: sticky; top:0; z-index: 20;
+    }
+    header h1 { margin:0; font-size: 20px; letter-spacing: 0.2px; }
+    .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .btn {
+      padding: 8px 12px; border-radius: 8px; border: 1px solid #2a325b;
+      background: #131830; color: var(--text); cursor: pointer; font-weight: 600; font-size: 13px;
+    }
+    .btn:hover { border-color: #3c4575; background: #161c37; }
+    .btn.primary { background: #243157; border-color: #5066b4; }
+    .btn.primary:hover { background: #283766; }
+    .btn.ghost { background: transparent; border-color: transparent; }
+    .btn.danger { background: #3b1d24; border-color: #69323f; color: #ffd8de; }
+
+    /* Tabs */
+    .tabs {
+      display: flex; gap: 8px; padding: 10px 16px; border-bottom: 1px solid #202642; background: #0f142a;
+      position: sticky; top:58px; z-index: 15;
+    }
+    .tab {
+      padding: 8px 12px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; font-weight: 700;
+      color: var(--muted);
+    }
+    .tab.active { color: var(--text); background: #1a2143; border-color: #2a3570; }
+
+    main { padding: 16px; max-width: 1200px; margin: 0 auto; }
+    .grid-2 { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; }
+    @media (max-width: 950px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: linear-gradient(180deg, #12162b, #0e1327);
+      border: 1px solid #1f2443; border-radius: 14px;
+      padding: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+    }
+    .card h2 { margin: 0 0 6px; font-size: 18px; }
+    .small { font-size: 12px; color: var(--muted); }
+
+    /* Wheel container */
+    .wheel-wrap { position: relative; min-height: 580px; display: grid; place-items: center; }
+    #wheel { width: 100%; max-width: 700px; height: auto; aspect-ratio: 1 / 1; }
+
+    .legend {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 8px; margin-top: 10px;
+    }
+    .legend .row {
+      display: grid; grid-template-columns: 1fr auto; gap: 8px;
+      align-items: center; padding: 6px 8px; border: 1px dashed #2a325b; border-radius: 8px;
+      background: #121631;
+    }
+    .legend .name { font-weight: 600; }
+    .legend .val { font-variant-numeric: tabular-nums; color: var(--accent-2); }
+
+    .values-panel { display: grid; gap: 12px; }
+    .value-row {
+      border: 1px solid var(--border); border-radius: 10px; padding: 10px;
+      display: grid; grid-template-columns: 1fr 140px; gap: 10px; align-items: center;
+      background: var(--panel);
+    }
+    .value-row .left { display: grid; gap: 4px; }
+    .value-row .title { font-weight: 700; }
+    .value-row .desc { color: var(--muted); font-size: 12px; }
+    .value-row input[type="range"] { width: 100%; }
+    .out { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    .statline {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-top: 8px;
+    }
+    .stat { border: 1px solid var(--border); border-radius: 10px; padding: 8px; background: #12162b; }
+    .stat .label { font-size: 12px; color: var(--muted); }
+    .stat .value { font-weight: 800; font-size: 18px; }
+
+    /* Action Plans page */
+    .plans-panel { display: grid; gap: 12px; }
+    .plan-row {
+      border: 1px solid var(--border); border-radius: 10px; padding: 10px;
+      background: var(--panel);
+    }
+    .plan-head { display:flex; justify-content: space-between; align-items:center; gap: 8px; }
+    .plan-title { font-weight: 800; }
+    .plan-score { font-variant-numeric: tabular-nums; color: var(--accent-2); font-weight: 700; }
+    textarea.note {
+      width: 100%; min-height: 80px; resize: vertical; border-radius: 8px;
+      border: 1px solid #2a325b; background: #0c1130; color: var(--text); padding: 8px; margin-top: 8px;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; place-items: center; z-index: 1000;
+    }
+    .modal { width: min(760px, 94vw); background: #0f142a; border: 1px solid #2a325b; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+    .modal header { display:flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid #2a325b; }
+    .modal header h3 { margin:0; font-size: 18px; }
+    .modal .content { padding: 12px 14px; display: grid; gap: 8px; }
+    .edit-list { display: grid; gap: 6px; }
+    .edit-row {
+      display: grid; grid-template-columns: auto 1fr auto; gap: 6px; align-items: center;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px;
+    }
+    .edit-row input[type="text"] {
+      width: 100%; border: 1px solid #2a325b; border-radius: 6px; padding: 6px; background: #0c1130; color: var(--text);
+    }
+    .modal .footer { display:flex; justify-content: flex-end; gap: 8px; padding: 12px 14px; border-top: 1px solid #2a325b; }
+
+    .footer-note { padding: 12px 16px; color: var(--muted); font-size: 12px; }
+
+    /* SVG classes (used live; export injects a minimal subset) */
+    .ring { stroke: var(--ring); fill: none; }
+    .axis { stroke: #34406f; stroke-width: 1.25; }
+    .tick { stroke: #2f3967; stroke-width: 0.9; }
+    .cat-label { font-size: 12px; fill: var(--muted); }
+    .handle { fill: var(--handle); stroke: #2d244f; stroke-width: 2; cursor: pointer; }
+    .overlay { fill: transparent; cursor: crosshair; }
+    .center-dot { fill: #8fd3ff; opacity: 0.7; }
+
+    .band { stroke: var(--band-stroke); stroke-width: 0.6; stroke-linejoin: round; } /* thin outline */
+
+    /* Page visibility */
+    .page { display: none; }
+    .page.active { display: block; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Wheel of Life</h1>
+      <div class="sub">Assess balance, set priorities, and plan actions</div>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="btnFullscreen" title="Enter full-screen">Full Screen</button>
+      <button class="btn" id="btnNew" title="Start fresh (neutral)">New</button>
+      <button class="btn" id="btnSave" title="Save to file">Save</button>
+      <button class="btn" id="btnLoad" title="Load from file">Load</button>
+      <button class="btn primary" id="btnExport" title="Export Wheel (PNG)">Export PNG</button>
+      <button class="btn ghost" id="btnPrint" title="Print / PDF">Print</button>
+      <button class="btn" id="btnEditCats" title="Edit Categories">Edit Categories</button>
+      <input type="file" id="fileInput" accept=".json,.txt" style="display:none" />
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="wheel">Wheel</button>
+    <button class="tab" data-tab="actions">Action Plans</button>
+  </div>
+
+  <main>
+    <!-- PAGE: WHEEL -->
+    <section id="page-wheel" class="page active">
+      <div class="grid-2">
+        <section class="card">
+          <h2>Interactive Wheel</h2>
+          <div class="small">
+            Tip: <strong>click</strong> any slice or <strong>drag</strong> the yellow handle to set your score (0–10).
+          </div>
+
+          <div class="wheel-wrap">
+            <!-- Responsive SVG -->
+            <svg id="wheel" viewBox="0 0 700 700" aria-label="Wheel of Life chart" role="img" xmlns="http://www.w3.org/2000/svg">
+              <!-- Background -->
+              <defs>
+                <radialGradient id="bgGrad" cx="50%" cy="50%" r="60%">
+                  <stop offset="0%" stop-color="#0f1324"></stop>
+                  <stop offset="100%" stop-color="#0b1020"></stop>
+                </radialGradient>
+              </defs>
+              <rect x="0" y="0" width="700" height="700" fill="url(#bgGrad)"></rect>
+
+              <!-- Rings and axes groups -->
+              <g id="rings"></g>
+              <g id="axes"></g>
+              <g id="ticks"></g>
+
+              <!-- Bands (stacked arc segments) -->
+              <g id="bands"></g>
+
+              <!-- Labels -->
+              <g id="labels"></g>
+
+              <!-- Handles -->
+              <g id="handles"></g>
+
+              <!-- center dot -->
+              <circle class="center-dot" cx="350" cy="350" r="3"></circle>
+
+              <!-- interaction overlay to capture clicks anywhere -->
+              <rect class="overlay" x="0" y="0" width="700" height="700"></rect>
+            </svg>
+          </div>
+
+          <div class="legend" id="legend"></div>
+
+          <div class="statline">
+            <div class="stat">
+              <div class="label">Average</div>
+              <div class="value" id="avgVal">5.0</div>
+            </div>
+            <div class="stat">
+              <div class="label">Lowest</div>
+              <div class="value" id="minVal">5.0</div>
+            </div>
+            <div class="stat">
+              <div class="label">Highest</div>
+              <div class="value" id="maxVal">5.0</div>
+            </div>
+            <div class="stat">
+              <div class="label">Balance (σ)</div>
+              <div class="value" id="stdVal">0.00</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Scores</h2>
+          <div class="small">Adjust with sliders or by interacting with the wheel.</div>
+          <div id="valuesPanel" class="values-panel"></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- PAGE: ACTION PLANS -->
+    <section id="page-actions" class="page">
+      <section class="card">
+        <h2>Action Plans</h2>
+        <div class="small">Your current score appears for each category. Capture one small next step in each area.</div>
+
+        <div id="plansPanel" class="plans-panel"></div>
+      </section>
+    </section>
+  </main>
+
+  <div class="footer-note">
+    This tool is for self-reflection and planning. It’s not medical or clinical advice. Data is stored locally in your browser unless you choose to export a file.
+  </div>
+
+  <!-- Modal: Edit Categories -->
+  <div id="modalOverlay" class="modal-overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <header>
+        <h3 id="modalTitle">Edit Categories</h3>
+        <button class="btn" id="btnCloseModal" aria-label="Close">Close</button>
+      </header>
+      <div class="content">
+        <div class="small">Rename, reorder, add/remove. Changes update the wheel instantly.</div>
+        <div id="editList" class="edit-list"></div>
+      </div>
+      <div class="footer">
+        <button class="btn" id="btnAddCategory">Add Category</button>
+        <button class="btn danger" id="btnResetCategories">Reset to Defaults</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- CONFIG ----------
+    const MAX_VALUE = 10;
+    const RINGS = 10;
+    const SIZE = 700;
+    const CX = SIZE / 2;
+    const CY = SIZE / 2;
+    const MARGIN = 40;         // Outer label margin
+    const RADIUS = (SIZE / 2) - MARGIN - 30; // base wheel radius
+    const BAND_THICKNESS = RADIUS / MAX_VALUE;
+    const STATE_KEY = 'wheelOfLifeState.v3'; // version bump for banded visualization
+
+    // Saturation curve (less saturated center -> more saturated edge)
+    const SAT_MIN = 10;  // %
+    const SAT_MAX = 95;  // %
+    const LIGHTNESS = 52; // % (constant, tweak for brightness)
+
+    // Default categories commonly used in Wheel of Life
+    const DEFAULT_CATEGORIES = [
+      "Career",
+      "Finance",
+      "Health",
+      "Family & Friends",
+      "Romance",
+      "Personal Growth",
+      "Fun & Recreation",
+      "Physical Environment"
+    ];
+
+    // ---------- STATE ----------
+    let categories = [...DEFAULT_CATEGORIES];
+    let values = new Array(categories.length).fill(5); // neutral mid-values
+    let notes = new Array(categories.length).fill('');
+    let draggingIndex = null;
+    let pointerId = null;
+
+    // ---------- UTILS ----------
+    function rad(deg) { return deg * Math.PI / 180; }
+    function angleForIndex(i, count=categories.length) {
+      const step = (2 * Math.PI) / count;
+      return -Math.PI/2 + (i * step); // center at top
+    }
+    function stepAngle(count=categories.length) { return (2 * Math.PI) / count; }
+    function pointOnCircle(theta, r) {
+      return { x: CX + r * Math.cos(theta), y: CY + r * Math.sin(theta) };
+    }
+    function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+    function roundTo(val, step=0.1) { return Math.round(val / step) * step; }
+    function valueToRadius(v) { return (v / MAX_VALUE) * RADIUS; }
+    function radiusToValue(r) { return clamp(roundTo((r / RADIUS) * MAX_VALUE, 0.1), 0, MAX_VALUE); }
+
+    function hslToHex(h, s, l) {
+      s/=100; l/=100;
+      const c = (1 - Math.abs(2*l-1)) * s;
+      const x = c * (1 - Math.abs((h/60)%2 - 1));
+      const m = l - c/2;
+      let r=0,g=0,b=0;
+      if (0<=h && h<60){ r=c; g=x; b=0; }
+      else if (60<=h && h<120){ r=x; g=c; b=0; }
+      else if (120<=h && h<180){ r=0; g=c; b=x; }
+      else if (180<=h && h<240){ r=0; g=x; b=c; }
+      else if (240<=h && h<300){ r=x; g=0; b=c; }
+      else { r=c; g=0; b=x; }
+      r = Math.round((r+m)*255); g = Math.round((g+m)*255); b = Math.round((b+m)*255);
+      const toHex = (v)=> v.toString(16).padStart(2,'0');
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    }
+    function buildPalette(count=categories.length) {
+      const cols = [];
+      for (let i=0;i<count;i++){
+        const h = (i * 360) / count; // evenly spaced hues
+        cols.push(h);
+      }
+      return cols; // store hues, compute saturation per band
+    }
+    let paletteHues = buildPalette();
+
+    function saveLocal() {
+      const payload = { categories, values, notes, ts: Date.now() };
+      try { localStorage.setItem(STATE_KEY, JSON.stringify(payload)); } catch(e) {}
+    }
+    function loadLocal() {
+      try {
+        const raw = localStorage.getItem(STATE_KEY);
+        if (!raw) return false;
+        const obj = JSON.parse(raw);
+        if (!obj || !obj.categories || !obj.values) return false;
+        categories = obj.categories;
+        values = obj.values;
+        notes = obj.notes || new Array(categories.length).fill('');
+        ensureArrayLengths();
+        return true;
+      } catch(e) { return false; }
+    }
+    function ensureArrayLengths() {
+      if (values.length !== categories.length) values = new Array(categories.length).fill(5);
+      if (notes.length !== categories.length) notes = new Array(categories.length).fill('');
+    }
+
+    // ---------- SVG refs ----------
+    const svgEl = document.getElementById('wheel');
+    const ringsG = document.getElementById('rings');
+    const axesG = document.getElementById('axes');
+    const ticksG = document.getElementById('ticks');
+    const bandsG = document.getElementById('bands');
+    const labelsG = document.getElementById('labels');
+    const handlesG = document.getElementById('handles');
+    const overlayEl = document.querySelector('.overlay');
+
+    // ---------- DRAW ----------
+    function drawBase() {
+      ringsG.innerHTML = '';
+      axesG.innerHTML = '';
+      ticksG.innerHTML = '';
+      labelsG.innerHTML = '';
+      handlesG.innerHTML = '';
+      bandsG.innerHTML = '';
+      paletteHues = buildPalette(categories.length);
+
+      // Rings
+      for (let r=BAND_THICKNESS; r <= RADIUS + 0.001; r += BAND_THICKNESS) {
+        const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        c.setAttribute('cx', CX); c.setAttribute('cy', CY); c.setAttribute('r', r.toFixed(2));
+        c.setAttribute('class','ring'); c.setAttribute('stroke-width', (r % (RADIUS/2) === 0) ? '1.4' : '1.0');
+        ringsG.appendChild(c);
+      }
+
+      // Axes + labels + ticks
+      const count = categories.length;
+      const step = stepAngle(count);
+      for (let i=0;i<count;i++){
+        const theta = angleForIndex(i,count);
+        const end = pointOnCircle(theta, RADIUS);
+
+        const axis = document.createElementNS('http://www.w3.org/2000/svg','line');
+        axis.setAttribute('x1', CX); axis.setAttribute('y1', CY);
+        axis.setAttribute('x2', end.x.toFixed(2)); axis.setAttribute('y2', end.y.toFixed(2));
+        axis.setAttribute('class','axis');
+        axesG.appendChild(axis);
+
+        // ticks (unit markers along axis)
+        for (let v=1; v<MAX_VALUE; v++){
+          const tPt = pointOnCircle(theta, v * BAND_THICKNESS);
+          const tick = document.createElementNS('http://www.w3.org/2000/svg','circle');
+          tick.setAttribute('cx', tPt.x.toFixed(2)); tick.setAttribute('cy', tPt.y.toFixed(2));
+          tick.setAttribute('r', 1.6); tick.setAttribute('class','tick');
+          ticksG.appendChild(tick);
+        }
+
+        // Label
+        const labelR = RADIUS + 16;
+        const labelPt = pointOnCircle(theta, labelR);
+        const lab = document.createElementNS('http://www.w3.org/2000/svg','text');
+        lab.setAttribute('x', labelPt.x.toFixed(2));
+        lab.setAttribute('y', labelPt.y.toFixed(2));
+        lab.setAttribute('class','cat-label');
+        lab.setAttribute('text-anchor', (Math.abs(Math.cos(theta))<0.3) ? 'middle' : (Math.cos(theta)>0 ? 'start' : 'end'));
+        lab.setAttribute('dominant-baseline', (Math.sin(theta)>0.3) ? 'hanging' : (Math.sin(theta)<-0.3 ? 'baseline' : 'middle'));
+        lab.textContent = categories[i];
+        labelsG.appendChild(lab);
+
+        // Handle at current value
+        const hv = values[i];
+        const hp = pointOnCircle(theta, valueToRadius(hv));
+        const handle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        handle.setAttribute('cx', hp.x.toFixed(2)); handle.setAttribute('cy', hp.y.toFixed(2));
+        handle.setAttribute('r', 7);
+        handle.setAttribute('data-index', i);
+        handle.setAttribute('class','handle');
+        handlesG.appendChild(handle);
+      }
+
+      // Bands (stacked arcs)
+      buildBands();
+      updateBands();
+      updateLegend();
+      updateStats();
+    }
+
+    function buildBands() {
+      const count = categories.length;
+      const step = stepAngle(count);
+      for (let i=0;i<count;i++){
+        const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+        g.setAttribute('class','category-bands');
+        g.setAttribute('data-index', i);
+        bandsG.appendChild(g);
+      }
+    }
+
+    // Compute annular sector path
+    function annularSectorPath(r0, r1, start, end) {
+      const pStartInner = pointOnCircle(start, r0);
+      const pEndInner = pointOnCircle(end, r0);
+      const pEndOuter = pointOnCircle(end, r1);
+      const pStartOuter = pointOnCircle(start, r1);
+      const largeArcFlag = 0;
+      // If r0 is ~0, draw as triangular sector
+      if (r0 < 0.0001) {
+        return `M ${CX} ${CY}
+                L ${pStartOuter.x.toFixed(2)} ${pStartOuter.y.toFixed(2)}
+                A ${r1.toFixed(2)} ${r1.toFixed(2)} 0 ${largeArcFlag} 1 ${pEndOuter.x.toFixed(2)} ${pEndOuter.y.toFixed(2)}
+                Z`;
+      }
+      return `M ${pStartOuter.x.toFixed(2)} ${pStartOuter.y.toFixed(2)}
+              A ${r1.toFixed(2)} ${r1.toFixed(2)} 0 ${largeArcFlag} 1 ${pEndOuter.x.toFixed(2)} ${pEndOuter.y.toFixed(2)}
+              L ${pEndInner.x.toFixed(2)} ${pEndInner.y.toFixed(2)}
+              A ${r0.toFixed(2)} ${r0.toFixed(2)} 0 ${largeArcFlag} 0 ${pStartInner.x.toFixed(2)} ${pStartInner.y.toFixed(2)}
+              Z`;
+    }
+
+    function bandColor(hue, bandIndex) {
+      // bandIndex: 1..MAX_VALUE (outer radius of the band)
+      const s = SAT_MIN + (bandIndex / MAX_VALUE) * (SAT_MAX - SAT_MIN);
+      return hslToHex(hue, s, LIGHTNESS);
+    }
+
+    function updateBands() {
+      const count = categories.length;
+      const step = stepAngle(count);
+      for (let i=0;i<count;i++){
+        const group = bandsG.querySelector(`.category-bands[data-index="${i}"]`);
+        // clear previous bands
+        group.innerHTML = '';
+
+        const thetaCenter = angleForIndex(i, count);
+        const start = thetaCenter - step/2;
+        const end = thetaCenter + step/2;
+        const v = values[i];
+        const full = Math.floor(v);
+        const frac = v - full;
+        const hue = paletteHues[i];
+
+        // Full bands
+        for (let j=0; j<full; j++){
+          const r0 = j * BAND_THICKNESS;
+          const r1 = (j+1) * BAND_THICKNESS;
+          const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+          path.setAttribute('class','band');
+          path.setAttribute('d', annularSectorPath(r0, r1, start, end));
+          path.setAttribute('fill', bandColor(hue, j+1));
+          path.setAttribute('stroke', getComputedStyle(document.documentElement).getPropertyValue('--band-stroke').trim() || '#2a325b');
+          path.setAttribute('stroke-width', '0.6');
+          path.setAttribute('stroke-linejoin', 'round');
+          group.appendChild(path);
+        }
+
+        // Fractional band
+        if (frac > 0) {
+          const r0 = full * BAND_THICKNESS;
+          const r1 = r0 + frac * BAND_THICKNESS;
+          const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+          path.setAttribute('class','band');
+          path.setAttribute('d', annularSectorPath(r0, r1, start, end));
+          path.setAttribute('fill', bandColor(hue, full+1));
+          path.setAttribute('stroke', getComputedStyle(document.documentElement).getPropertyValue('--band-stroke').trim() || '#2a325b');
+          path.setAttribute('stroke-width', '0.6');
+          path.setAttribute('stroke-linejoin', 'round');
+          group.appendChild(path);
+        }
+      }
+    }
+
+    function updateLegend() {
+      const legend = document.getElementById('legend');
+      legend.innerHTML = '';
+      for (let i=0;i<categories.length;i++){
+        const row = document.createElement('div');
+        row.className = 'row';
+        const name = document.createElement('div'); name.className='name'; name.textContent = categories[i];
+        const val = document.createElement('div'); val.className='val'; val.textContent = values[i].toFixed(1);
+        row.appendChild(name); row.appendChild(val);
+        legend.appendChild(row);
+      }
+    }
+
+    function updateStats() {
+      const avg = values.reduce((a,b)=>a+b,0) / values.length;
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const std = Math.sqrt(values.reduce((s,v)=>s + Math.pow(v-avg,2),0) / values.length);
+
+      document.getElementById('avgVal').textContent = avg.toFixed(1);
+      document.getElementById('minVal').textContent = min.toFixed(1);
+      document.getElementById('maxVal').textContent = max.toFixed(1);
+      document.getElementById('stdVal').textContent = std.toFixed(2);
+    }
+
+    // ---------- INTERACTION ----------
+    function nearestAxisIndex(theta) {
+      const count = categories.length;
+      let best = 0, bestDiff = Infinity;
+      for (let i=0;i<count;i++){
+        const a = angleForIndex(i,count);
+        let diff = Math.abs(Math.atan2(Math.sin(theta-a), Math.cos(theta-a))); // minimal angular diff
+        if (diff < bestDiff) { bestDiff = diff; best = i; }
+      }
+      return best;
+    }
+
+    function onOverlayPointerDown(e) {
+      overlayEl.setPointerCapture(e.pointerId);
+      pointerId = e.pointerId;
+
+      const svgPt = clientToSvg(e.clientX, e.clientY);
+      const dx = svgPt.x - CX, dy = svgPt.y - CY;
+      const theta = Math.atan2(dy, dx);
+      const r = Math.sqrt(dx*dx + dy*dy);
+      const index = nearestAxisIndex(theta);
+
+      const newVal = radiusToValue(clamp(r, 0, RADIUS));
+      values[index] = newVal;
+      draggingIndex = index;
+      updateBands();
+      moveHandlesToValues();
+      syncControlsFromValues();
+      updateLegend();
+      updateStats();
+      saveLocal();
+      buildPlansPanel(); // keep action page in sync
+    }
+
+    function onOverlayPointerMove(e) {
+      if (draggingIndex === null || e.pointerId !== pointerId) return;
+      const svgPt = clientToSvg(e.clientX, e.clientY);
+      const dx = svgPt.x - CX, dy = svgPt.y - CY;
+      const r = Math.sqrt(dx*dx + dy*dy);
+      values[draggingIndex] = radiusToValue(clamp(r, 0, RADIUS));
+      updateBands();
+      moveHandlesToValues();
+      syncControlsFromValues();
+      updateLegend();
+      updateStats();
+      buildPlansPanel();
+    }
+
+    function onOverlayPointerUp(e) {
+      if (e.pointerId === pointerId) {
+        overlayEl.releasePointerCapture(e.pointerId);
+        draggingIndex = null;
+        pointerId = null;
+        saveLocal();
+      }
+    }
+
+    // Drag directly on handle
+    function onHandlePointerDown(e) {
+      const idx = parseInt(e.target.getAttribute('data-index'), 10);
+      handlesG.setPointerCapture(e.pointerId);
+      pointerId = e.pointerId;
+      draggingIndex = idx;
+    }
+    function onHandlePointerMove(e) {
+      if (draggingIndex === null || e.pointerId !== pointerId) return;
+      const svgPt = clientToSvg(e.clientX, e.clientY);
+      const dx = svgPt.x - CX, dy = svgPt.y - CY;
+      const r = Math.sqrt(dx*dx + dy*dy);
+      values[draggingIndex] = radiusToValue(clamp(r, 0, RADIUS));
+      updateBands();
+      moveHandlesToValues();
+      syncControlsFromValues();
+      updateLegend();
+      updateStats();
+      buildPlansPanel();
+    }
+    function onHandlePointerUp(e) {
+      if (e.pointerId === pointerId) {
+        handlesG.releasePointerCapture(e.pointerId);
+        draggingIndex = null; pointerId = null; saveLocal();
+      }
+    }
+
+    function moveHandlesToValues() {
+      const count = categories.length;
+      const handles = handlesG.querySelectorAll('.handle');
+      handles.forEach((h,i)=>{
+        const th = angleForIndex(i,count);
+        const p = pointOnCircle(th, valueToRadius(values[i]));
+        h.setAttribute('cx', p.x.toFixed(2)); h.setAttribute('cy', p.y.toFixed(2));
+      });
+    }
+
+    function clientToSvg(clientX, clientY) {
+      const pt = svgEl.createSVGPoint();
+      pt.x = clientX; pt.y = clientY;
+      const screenCTM = svgEl.getScreenCTM();
+      return pt.matrixTransform(screenCTM.inverse());
+    }
+
+    // ---------- RIGHT PANEL CONTROLS (Wheel page) ----------
+    function buildControls() {
+      const panel = document.getElementById('valuesPanel');
+      panel.innerHTML = '';
+      for (let i=0;i<categories.length;i++) {
+        const row = document.createElement('div');
+        row.className = 'value-row';
+
+        const left = document.createElement('div');
+        left.className = 'left';
+        const title = document.createElement('div');
+        title.className = 'title';
+        title.textContent = categories[i];
+
+        const desc = document.createElement('div');
+        desc.className = 'desc';
+        desc.textContent = 'Score (0–10):';
+        left.appendChild(title); left.appendChild(desc);
+
+        const right = document.createElement('div');
+        const range = document.createElement('input');
+        range.type = 'range'; range.min = '0'; range.max = String(MAX_VALUE); range.step='0.1';
+        range.value = values[i].toString();
+        range.addEventListener('input', () => {
+          values[i] = parseFloat(range.value);
+          updateBands(); moveHandlesToValues(); updateLegend(); updateStats();
+          syncControlsFromValues(); saveLocal(); buildPlansPanel();
+        });
+
+        const out = document.createElement('div');
+        out.className = 'out';
+        out.textContent = values[i].toFixed(1);
+
+        right.appendChild(range); right.appendChild(out);
+
+        row.appendChild(left);
+        row.appendChild(right);
+
+        panel.appendChild(row);
+      }
+    }
+
+    function syncControlsFromValues() {
+      const panel = document.getElementById('valuesPanel');
+      const ranges = panel.querySelectorAll('input[type="range"]');
+      const outputs = panel.querySelectorAll('.value-row .out');
+      ranges.forEach((r,i)=> r.value = values[i]);
+      outputs.forEach((o,i)=> o.textContent = values[i].toFixed(1));
+    }
+
+    // ---------- Action Plans page ----------
+    function buildPlansPanel() {
+      const panel = document.getElementById('plansPanel');
+      panel.innerHTML = '';
+      for (let i=0;i<categories.length;i++){
+        const row = document.createElement('div');
+        row.className = 'plan-row';
+
+        const head = document.createElement('div');
+        head.className = 'plan-head';
+        const title = document.createElement('div'); title.className='plan-title'; title.textContent = categories[i];
+        const score = document.createElement('div'); score.className='plan-score'; score.textContent = values[i].toFixed(1);
+        head.appendChild(title); head.appendChild(score);
+
+        const note = document.createElement('textarea');
+        note.className = 'note';
+        note.placeholder = 'One small next step I will take in this area...';
+        note.value = notes[i] || '';
+        note.addEventListener('input', ()=> {
+          notes[i] = note.value; saveLocal();
+        });
+
+        row.appendChild(head);
+        row.appendChild(note);
+        panel.appendChild(row);
+      }
+    }
+
+    // ---------- EXPORT / IMPORT ----------
+    function svgInlineStyle() {
+      return `
+        .ring { stroke: #29305a; fill: none; }
+        .axis { stroke: #34406f; stroke-width: 1.25; }
+        .tick { stroke: #2f3967; stroke-width: 0.9; }
+        .cat-label { font-size: 12px; fill: #b9c2ff; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+        .handle { fill: #ffd166; stroke: #2d244f; stroke-width: 2; }
+        .center-dot { fill: #8fd3ff; opacity: 0.7; }
+        .overlay { fill: transparent; }
+        .band { stroke: #2a325b; stroke-width: 0.6; stroke-linejoin: round; }
+      `;
+    }
+
+    function exportPNG() {
+      const clone = svgEl.cloneNode(true);
+      const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+      style.setAttribute('type','text/css');
+      style.textContent = svgInlineStyle();
+      const defs = clone.querySelector('defs');
+      if (defs) {
+        defs.parentNode.insertBefore(style, defs.nextSibling);
+      } else {
+        clone.insertBefore(style, clone.firstChild);
+      }
+
+      const serializer = new XMLSerializer();
+      let svgStr = serializer.serializeToString(clone);
+      if (!svgStr.includes('xmlns="http://www.w3.org/2000/svg"')) {
+        svgStr = svgStr.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+      }
+      const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = SIZE; canvas.height = SIZE;
+      const ctx = canvas.getContext('2d');
+
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0,0,SIZE,SIZE);
+        ctx.drawImage(img, 0, 0, SIZE, SIZE);
+        const png = canvas.toDataURL('image/png');
+
+        const a = document.createElement('a');
+        a.href = png;
+        const dateStr = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+        a.download = `wheel-of-life-${dateStr}.png`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      };
+      img.onerror = ()=> alert('Export failed: your browser may not support drawing inline SVG to canvas.');
+      img.src = svgDataUrl;
+    }
+
+    function saveToFile() {
+      const payload = { categories, values, notes, savedAt: new Date().toISOString() };
+      const blob = new Blob([JSON.stringify(payload,null,2)], {type: 'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'wheel-of-life.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    }
+
+    function loadFromFile(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const obj = JSON.parse(reader.result);
+          if (!obj.categories || !obj.values) throw new Error('Invalid file');
+          categories = obj.categories;
+          values = obj.values;
+          notes = obj.notes || new Array(categories.length).fill('');
+          ensureArrayLengths();
+          saveLocal();
+          drawBase();
+          buildControls();
+          buildPlansPanel();
+        } catch(e) {
+          alert('Could not load: ' + e.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // ---------- CATEGORY MODAL ----------
+    const modalOverlay = document.getElementById('modalOverlay');
+    function openModal() {
+      modalOverlay.style.display = 'grid';
+      modalOverlay.setAttribute('aria-hidden','false');
+      buildEditList();
+    }
+    function closeModal() {
+      modalOverlay.style.display = 'none';
+      modalOverlay.setAttribute('aria-hidden','true');
+    }
+    document.getElementById('btnEditCats').addEventListener('click', openModal);
+    document.getElementById('btnCloseModal').addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e)=> { if (e.target === modalOverlay) closeModal(); });
+
+    function buildEditList() {
+      const list = document.getElementById('editList');
+      list.innerHTML = '';
+      for (let i=0;i<categories.length;i++){
+        const row = document.createElement('div');
+        row.className = 'edit-row';
+
+        const drag = document.createElement('span');
+        drag.textContent = '↕';
+        drag.title = 'Use ↑ ↓ buttons to reorder';
+        drag.style.opacity = '0.6';
+
+        const input = document.createElement('input');
+        input.type = 'text'; input.value = categories[i];
+        input.addEventListener('change', ()=>{
+          categories[i] = input.value || `Category ${i+1}`;
+          saveLocal(); drawBase(); buildControls(); buildPlansPanel();
+        });
+
+        const controls = document.createElement('div');
+        controls.style.display='flex'; controls.style.gap='6px';
+
+        const up = document.createElement('button'); up.className='btn'; up.textContent='↑';
+        up.addEventListener('click', ()=>{
+          if (i===0) return;
+          swapCategory(i, i-1);
+        });
+        const down = document.createElement('button'); down.className='btn'; down.textContent='↓';
+        down.addEventListener('click', ()=>{
+          if (i===categories.length-1) return;
+          swapCategory(i, i+1);
+        });
+        const del = document.createElement('button'); del.className='btn danger'; del.textContent='Delete';
+        del.addEventListener('click', ()=>{
+          categories.splice(i,1);
+          values.splice(i,1);
+          notes.splice(i,1);
+          saveLocal(); drawBase(); buildControls(); buildPlansPanel(); buildEditList();
+        });
+
+        controls.appendChild(up); controls.appendChild(down); controls.appendChild(del);
+        row.appendChild(drag); row.appendChild(input); row.appendChild(controls);
+        list.appendChild(row);
+      }
+    }
+
+    function swapCategory(a,b) {
+      [categories[a], categories[b]] = [categories[b], categories[a]];
+      [values[a], values[b]] = [values[b], values[a]];
+      [notes[a], notes[b]] = [notes[b], notes[a]];
+      saveLocal(); drawBase(); buildControls(); buildPlansPanel(); buildEditList();
+    }
+
+    document.getElementById('btnAddCategory').addEventListener('click', ()=>{
+      const name = prompt('New category name:');
+      if (!name) return;
+      categories.push(name);
+      values.push(5);
+      notes.push('');
+      saveLocal(); drawBase(); buildControls(); buildPlansPanel(); buildEditList();
+    });
+    document.getElementById('btnResetCategories').addEventListener('click', ()=>{
+      if (!confirm('Reset categories to defaults and set scores to 5?')) return;
+      categories = [...DEFAULT_CATEGORIES];
+      values = new Array(categories.length).fill(5);
+      notes = new Array(categories.length).fill('');
+      saveLocal(); drawBase(); buildControls(); buildPlansPanel(); buildEditList();
+    });
+
+    // ---------- GLOBAL BUTTONS ----------
+    document.getElementById('btnExport').addEventListener('click', exportPNG);
+    document.getElementById('btnSave').addEventListener('click', saveToFile);
+    document.getElementById('btnLoad').addEventListener('click', ()=> document.getElementById('fileInput').click());
+    document.getElementById('fileInput').addEventListener('change', (e)=> {
+      const f = e.target.files?.[0]; if (f) loadFromFile(f);
+      e.target.value = '';
+    });
+    document.getElementById('btnNew').addEventListener('click', ()=>{
+      if (!confirm('Start fresh and reset scores to neutral (5)?')) return;
+      values = new Array(categories.length).fill(5);
+      notes = new Array(categories.length).fill('');
+      saveLocal(); drawBase(); buildControls(); buildPlansPanel();
+    });
+    document.getElementById('btnPrint').addEventListener('click', ()=> window.print());
+    document.getElementById('btnFullscreen').addEventListener('click', ()=> {
+      const el = document.documentElement;
+      if (document.fullscreenElement) document.exitFullscreen();
+      else el.requestFullscreen?.();
+    });
+
+    // ---------- TABS ----------
+    const tabs = document.querySelectorAll('.tab');
+    function setActiveTab(name) {
+      tabs.forEach(t=>{
+        t.classList.toggle('active', t.dataset.tab === name);
+      });
+      document.querySelectorAll('.page').forEach(p=>{
+        p.classList.toggle('active', p.id === 'page-' + name);
+      });
+    }
+    tabs.forEach(t=> t.addEventListener('click', ()=> setActiveTab(t.dataset.tab)));
+
+    // ---------- INIT ----------
+    function init() {
+      const hadLocal = loadLocal();
+      if (!hadLocal) {
+        values = new Array(categories.length).fill(5);
+        notes = new Array(categories.length).fill('');
+      }
+      drawBase();
+      buildControls();
+      buildPlansPanel();
+
+      // Overlay interactions
+      overlayEl.addEventListener('pointerdown', onOverlayPointerDown);
+      overlayEl.addEventListener('pointermove', onOverlayPointerMove);
+      overlayEl.addEventListener('pointerup', onOverlayPointerUp);
+      overlayEl.addEventListener('pointerleave', onOverlayPointerUp);
+
+      // Handle interactions
+      handlesG.addEventListener('pointerdown', (e)=>{
+        if (e.target.classList.contains('handle')) onHandlePointerDown(e);
+      });
+      handlesG.addEventListener('pointermove', onHandlePointerMove);
+      handlesG.addEventListener('pointerup', onHandlePointerUp);
+      handlesG.addEventListener('pointerleave', onHandlePointerUp);
+
+      // Keyboard nudges: arrow keys adjust selected category
+      document.addEventListener('keydown', (e)=>{
+        if (draggingIndex==null) return;
+        if (e.key==='ArrowUp' || e.key==='ArrowRight') {
+          values[draggingIndex] = clamp(values[draggingIndex] + 0.1, 0, MAX_VALUE);
+          updateBands(); moveHandlesToValues(); syncControlsFromValues(); updateLegend(); updateStats(); buildPlansPanel();
+        } else if (e.key==='ArrowDown' || e.key==='ArrowLeft') {
+          values[draggingIndex] = clamp(values[draggingIndex] - 0.1, 0, MAX_VALUE);
+          updateBands(); moveHandlesToValues(); syncControlsFromValues(); updateLegend(); updateStats(); buildPlansPanel();
+        }
+      });
+    }
+    init();
+  </script>
+
+  <!-- Print styles -->
+  <style media="print">
+    header, .tabs, .footer-note,
+    #btnFullscreen, #btnExport, #btnSave, #btnLoad, #btnNew, #btnPrint, #btnEditCats,
+    #modalOverlay { display: none !important; }
+    body { background: #fff !important; color: #000; }
+    .card { box-shadow: none; background: #fff; border-color: #ddd; }
+    /* Ensure both pages are visible on print */
+    .page { display: block !important; }
+    .band { stroke: #666; stroke-width: 0.5; } /* slightly lighter outline for print */
+  </style>
+</body>
+</html>
