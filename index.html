@@ -4,8 +4,14 @@
   <meta charset="utf-8" />
   <title>Wheel of Life — Interactive Workshop App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Styles -->
   css/base.css
-  <link rel="stylesheet" href="css/print.css" media="print<h1>Wheel of Life</h1>
+  css/print.css
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Wheel of Life</h1>
       <div class="sub">Assess balance, set priorities, and plan actions</div>
     </div>
     <div class="toolbar">
@@ -85,7 +91,7 @@
     <section id="page-history" class="page">
       <section class="card">
         <h2>History (Time Series)</h2>
-      <div class="small">Snapshots are stored locally. Export/import for portability.</div>
+        <div class="small">Snapshots are stored locally. Export/import for portability.</div>
 
         <div class="history-toolbar">
           <button class="btn" id="btnExportSnaps">Export Snapshots (JSON)</button>
@@ -180,7 +186,10 @@
   <!-- Modal -->
   <div id="modalOverlay" class="modal-overlay" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <header><h3 id="modalTitle">Edit Categories</h3><button class="btn" id="btnCloseModal">Close</button></header>
+      <header>
+        <h3 id="modalTitle">Edit Categories</h3>
+        <button class="btn" id="btnCloseModal">Close</button>
+      </header>
       <div class="content">
         <div class="small">Rename, reorder, add/remove. Changes update the wheel.</div>
         <div id="editList" class="edit-list"></div>
@@ -192,6 +201,7 @@
     </div>
   </div>
 
+  <!-- App -->
   js/app.js</script>
 </body>
 </html>
