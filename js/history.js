@@ -134,6 +134,18 @@ export function drawCombinedTimeChart(containerEl, maToggleEl, maWindowEl){
   function onLeave(){ marker.style.display='none'; label.style.display='none'; }
   overlay.addEventListener('pointermove', onMove);
   overlay.addEventListener('pointerleave', onLeave);
+  
+  // Touch hover (show marker on finger move)
+  overlay.addEventListener('touchstart', e => { e.preventDefault(); onMove(touchToPointerLike(e, svg)); }, { passive: false });
+  overlay.addEventListener('touchmove',  e => { e.preventDefault(); onMove(touchToPointerLike(e, svg)); }, { passive: false });
+  overlay.addEventListener('touchend',   e => { e.preventDefault(); onLeave(); }, { passive: false });
+  
+  // Helper to synthesize pointer-like event (clientX/clientY)
+  function touchToPointerLike(e, svg){
+    const t=e.touches?.[0] || e.changedTouches?.[0];
+    if(!t) return { clientX: 0, clientY: 0 };
+    return { clientX: t.clientX, clientY: t.clientY, target: svg };
+  }
 
   containerEl.appendChild(svg);
 }
