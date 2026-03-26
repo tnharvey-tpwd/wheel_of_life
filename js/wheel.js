@@ -10,14 +10,48 @@ import {
 
 export function initWheel(dom, onValueChanged) {
   // Attach events early (defensive)
-  dom.overlay.addEventListener('pointerdown', e => onOverlayPointerDown(e, dom, onValueChanged));
+  
+dom.overlay.addEventListener('pointerdown', e => onOverlayPointerDown(e, dom, onValueChanged));
   dom.overlay.addEventListener('pointermove', e => onOverlayPointerMove(e, dom, onValueChanged));
-  dom.overlay.addEventListener('pointerup', e => onOverlayPointerUp(e, dom));
-  dom.overlay.addEventListener('pointerleave', e => onOverlayPointerUp(e, dom));
+  dom.overlay.addEventListener('pointerup',   e => onOverlayPointerUp(e, dom));
+  dom.overlay.addEventListener('pointerleave',e => onOverlayPointerUp(e, dom));
   dom.handlesG.addEventListener('pointerdown', e => { if(e.target.classList.contains('handle')) onHandlePointerDown(e, dom); });
   dom.handlesG.addEventListener('pointermove', e => onHandlePointerMove(e, dom, onValueChanged));
-  dom.handlesG.addEventListener('pointerup', e => onHandlePointerUp(e, dom));
-  dom.handlesG.addEventListener('pointerleave', e => onHandlePointerUp(e, dom));
+  dom.handlesG.addEventListener('pointerup',   e => onHandlePointerUp(e, dom));
+  dom.handlesG.addEventListener('pointerleave',e => onHandlePointerUp(e, dom));
+
+  // Touch events (iOS/WebKit compatibility & better control)
+  dom.overlay.addEventListener('touchstart', e => { e.preventDefault(); onTouchOverlayStart(e, dom, onValueChanged); }, { passive: false });
+  dom.overlay.addEventListener('touchmove',  e => { e.preventDefault(); onTouchOverlayMove(e, dom, onValueChanged); }, { passive: false });
+  dom.overlay.addEventListener('touchend',   e => { e.preventDefault(); onOverlayPointerUp({pointerId}); }, { passive: false });
+
+  dom.handlesG.addEventListener('touchstart', e => {
+    const t = e.touches?.[0]; if (!t) return;
+    const tgt = e.target;
+    if (tgt.classList && tgt.classList.contains('handle')) { e.preventDefault(); onHandlePointerDown({ pointerId: 999, target: tgt }, dom); }
+  }, { passive: false });
+  dom.handlesG.addEventListener('touchmove',  e => { e.preventDefault();
+    const t=e.touches?.[0]; if(!t) return;
+    // synthesize pointer-like object for reuse
+    onHandlePointerMove({ pointerId, clientX: t.clientX, clientY: t.clientY }, dom, onValueChanged);
+  }, { passive: false });
+  dom.handlesG.addEventListener('touchend',   e => { e.preventDefault(); onHandlePointerUp({ pointerId }); }, { passive: false });
+  
+// Helpers for touch overlay
+function onTouchOverlayStart(e, dom, onValueChanged){
+  const t=e.touches?.[0]; if(!t) return;
+  const pt=clientToSvg(dom.svg, t.clientX,t.clientY), dx=pt.x-CX, dy=pt.y-CY, theta=Math.atan2(dy,dx), r=Math.sqrt(dx*dx+dy*dy);
+  const index=nearestAxisIndex(theta), newVal=radiusToValue(clamp(r,0,RADIUS));
+  // use a synthetic pointerId for touch series
+  pointerId = 888;
+  setValue(index, newVal, {announce:true, dom, onValueChanged}); draggingIndex=index;
+}
+function onTouchOverlayMove(e, dom, onValueChanged){
+  const t=e.touches?.[0]; if(draggingIndex===null || !t) return;
+  const pt=clientToSvg(dom.svg, t.clientX,t.clientY), dx=pt.x-CX, dy=pt.y-CY, r=Math.sqrt(dx*dx+dy*dy);
+  setValue(draggingIndex, radiusToValue(clamp(r,0,RADIUS)), {dom, onValueChanged});
+}
+
 }
 
 let draggingIndex = null, pointerId = null;
