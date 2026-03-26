@@ -171,3 +171,52 @@ input[type="checkbox"] { transform: scale(1.1); }
 
 /* Footer note */
 .footer-note { padding: 12px 16px; color: var(--muted); }
+
+
+/* --- Mobile toolbar: keep single row with icons --- */
+.toolbar {
+  gap: 6px;
+  overflow-x: auto;
+  flex-wrap: nowrap;         /* prevent wrapping */
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+.toolbar .btn {
+  scroll-snap-align: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;         /* tighter padding */
+}
+
+/* Icon inside buttons (JS will insert .icon + wrap text in .label) */
+.btn .icon {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+}
+.btn .icon svg {
+  width: 18px; height: 18px;
+  fill: currentColor;
+}
+
+/* At small widths: icon-only */
+@media (max-width: 640px) {
+  .btn .label { display: none; }  /* hide text, show icons */
+}
+
+/* --- Wheel sizing for mobile --- */
+@media (max-width: 640px) {
+  .wheel-wrap { min-height: 55vh; }   /* give the wheel room vertically */
+  #wheel { max-width: 100%; }         /* already responsive; keep it tight */
+}
+
+/* Charts & cards: prevent horizontal overflow on mobile */
+.chart-card { overflow: hidden; }
+.chart-svg { width: 100%; display: block; }
+
+/* Touch-friendly interactions: avoid scrolling while dragging charts/wheel */
+.overlay,
+.chart-card svg rect {
+  touch-action: none;                 /* allow vertical page scroll elsewhere, but not within the chart overlay */
+}
