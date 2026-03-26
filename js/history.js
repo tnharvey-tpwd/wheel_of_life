@@ -2,6 +2,24 @@
 import { state, saveSnapshots } from './state.js';
 import { arrayAvg, arrayStd, fmtDate, pathFromSeries, seriesMA, cssVar } from './utils.js';
 
+function measureContainer(el) {
+  // prefer clientWidth; fallback to bounding box; last resort, viewport width
+  let w = el.clientWidth;
+  if (!w || w < 20) { const r = el.getBoundingClientRect(); w = r.width; }
+  if (!w || w < 20) { w = Math.min(800, document.documentElement.clientWidth - 24); } // margin fallback
+  return w;
+}
+
+// drawCombinedTimeChart
+const width = measureContainer(containerEl);
+const height = Math.round(width * 9 / 16);
+const svg = document.createElementNS(svgNS,'svg'); svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
+
+// drawAvgSigmaChart
+const width = measureContainer(containerEl);
+const height = Math.round(width * 9 / 16);
+const svg = document.createElementNS(svgNS,'svg'); svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
+
 // Controls
 export function refreshHistoryControls(baselineSelectEl){
   baselineSelectEl.innerHTML='';
