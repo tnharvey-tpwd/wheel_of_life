@@ -74,6 +74,12 @@ export function drawWheel(dom) {
   }
 
   // Axes, ticks, labels, handles
+  // js/wheel.js (inside drawWheel, where handle is created)
+  const handleR = (window.innerWidth <= 640) ? 12 : 8;
+  const handle=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  handle.setAttribute('cx',hp.x.toFixed(2)); handle.setAttribute('cy',hp.y.toFixed(2)); handle.setAttribute('r', handleR);
+  handle.setAttribute('data-index',i); handle.setAttribute('class','handle'); dom.handlesG.appendChild(handle);
+
   const count=state.categories.length, step=stepAngle(count);
   for(let i=0;i<count;i++){
     const theta=angleForIndex(i,count), end=pointOnCircle(theta,RADIUS);
