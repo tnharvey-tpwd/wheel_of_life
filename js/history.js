@@ -10,11 +10,6 @@ function measureContainer(el) {
   return w;
 }
 
-// drawCombinedTimeChart
-const width = measureContainer(containerEl);
-const height = Math.round(width * 9 / 16);
-const svg = document.createElementNS(svgNS,'svg'); svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
-
 // drawAvgSigmaChart
 const width = measureContainer(containerEl);
 const height = Math.round(width * 9 / 16);
