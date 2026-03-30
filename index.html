@@ -4,8 +4,7 @@
   <meta charset="utf-8" />
   <title>Wheel of Life — Interactive Workshop App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/wheel_of_life/css/base.css">
-  <link rel="stylesheet" media="print" href="/wheel_of_life/css/print.css">
+  <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
   <header>
@@ -27,7 +26,6 @@
     </div>
   </header>
 
-  <!-- Tabs -->
   <div class="tabs">
     <button class="tab active" data-tab="wheel">Wheel</button>
     <button class="tab" data-tab="actions">Action Plans</button>
@@ -35,12 +33,10 @@
   </div>
 
   <main>
-    <!-- WHEEL -->
     <section id="page-wheel" class="page active">
       <section class="card">
         <h2>Interactive Wheel</h2>
         <div class="small">Click or drag the yellow handles (snaps to 0.5). Use keyboard on legend rows.</div>
-
         <div class="wheel-wrap">
           <svg id="wheel" viewBox="0 0 1100 1100" role="img" aria-label="Wheel of Life chart" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -50,24 +46,18 @@
               </radialGradient>
             </defs>
             <rect x="0" y="0" width="1100" height="1100" fill="url(#bgGrad)"></rect>
-
             <g id="rings"></g>
             <g id="axes"></g>
             <g id="ticks"></g>
             <g id="bands"></g>
             <g id="labels"></g>
-
-            <!-- Overlay BEFORE handles (so handles remain draggable) -->
             <rect class="overlay" x="0" y="0" width="1100" height="1100"></rect>
-
             <g id="handles"></g>
             <circle class="center-dot" cx="550" cy="550" r="3"></circle>
           </svg>
           <div id="liveRegion" class="sr-live" aria-live="polite" aria-atomic="true"></div>
         </div>
-
         <div id="legend" class="legend" aria-label="Category legend and current scores"></div>
-
         <div class="statline">
           <div class="stat"><div class="label">Average</div><div class="value" id="avgVal">5.0</div></div>
           <div class="stat"><div class="label">Lowest</div><div class="value" id="minVal">5.0</div></div>
@@ -77,7 +67,6 @@
       </section>
     </section>
 
-    <!-- ACTION PLANS -->
     <section id="page-actions" class="page">
       <section class="card">
         <h2>Action Plans</h2>
@@ -86,88 +75,47 @@
       </section>
     </section>
 
-    <!-- HISTORY -->
     <section id="page-history" class="page">
       <section class="card">
         <h2>History (Time Series)</h2>
         <div class="small">Snapshots are stored locally. Export/import for portability.</div>
-
         <div class="history-toolbar">
           <button class="btn" id="btnExportSnaps">Export Snapshots (JSON)</button>
           <button class="btn" id="btnImportSnaps">Import Snapshots</button>
           <button class="btn danger" id="btnClearSnaps">Clear All Snapshots</button>
         </div>
-
         <div class="chart-card">
           <div class="chart-title">Controls</div>
           <div class="chart-controls">
-            <div class="form-field">
-              <label for="baselineSelect">Baseline:</label>
-              <select id="baselineSelect"></select>
-            </div>
-            <div class="form-field">
-              <label for="maToggle">Moving Avg:</label>
-              <input type="checkbox" id="maToggle" checked />
-            </div>
-            <div class="form-field">
-              <label for="maWindow">MA Window:</label>
-              <input type="number" id="maWindow" min="2" max="10" value="3" />
-            </div>
-            <div class="form-field">
-              <label for="targetAvg">Desired Avg ≥</label>
-              <input type="number" id="targetAvg" min="0" max="10" step="0.5" value="7" />
-            </div>
-            <div class="form-field">
-              <label for="targetSigma">Desired σ ≤</label>
-              <input type="number" id="targetSigma" min="0" max="5" step="0.1" value="1.5" />
-            </div>
-            <div class="form-field">
-              <label for="isoToggle">Show BAA iso-lines</label>
-              <input type="checkbox" id="isoToggle" checked />
-            </div>
+            <div class="form-field"><label for="baselineSelect">Baseline:</label><select id="baselineSelect"></select></div>
+            <div class="form-field"><label for="maToggle">Moving Avg:</label><input type="checkbox" id="maToggle" checked /></div>
+            <div class="form-field"><label for="maWindow">MA Window:</label><input type="number" id="maWindow" min="2" max="10" value="3" /></div>
+            <div class="form-field"><label for="targetAvg">Desired Avg ≥</label><input type="number" id="targetAvg" min="0" max="10" step="0.5" value="7" /></div>
+            <div class="form-field"><label for="targetSigma">Desired σ ≤</label><input type="number" id="targetSigma" min="0" max="5" step="0.1" value="1.5" /></div>
+            <div class="form-field"><label for="isoToggle">Show BAA iso-lines</label><input type="checkbox" id="isoToggle" checked /></div>
           </div>
         </div>
 
         <div class="history-grid">
-          <!-- Snapshots table card -->
           <div class="chart-card">
             <div class="chart-title">Snapshots</div>
             <table class="history-table" id="historyTable" aria-label="Snapshot list">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Average</th>
-                  <th>σ</th>
-                  <th>Categories</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Date</th><th>Average</th><th>σ</th><th>Categories</th><th>Actions</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
-
-          <!-- Combined time series -->
           <div class="chart-card">
             <div class="chart-title">Combined Time Series (Categories + σ)</div>
             <div id="combinedChart" class="chart-svg" role="img" aria-label="Categories and balance sigma over time" tabindex="0"></div>
           </div>
-
           <div class="chart-card">
             <div class="chart-title">Average vs. Balance (σ)</div>
             <div id="avgSigmaChart" class="chart-svg" role="img" aria-label="Average vs sigma" tabindex="0"></div>
           </div>
-
           <div class="chart-card">
             <div class="chart-title">Delta vs Baseline (latest snapshot)</div>
             <table class="history-table" id="deltaTable" aria-label="Delta vs baseline">
-              <thead>
-                <tr>
-                  <th>Category</th>
-                  <th>Baseline</th>
-                  <th>Latest</th>
-                  <th>Δ (Latest − Baseline)</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Category</th><th>Baseline</th><th>Latest</th><th>Δ (Latest − Baseline)</th></tr></thead>
               <tbody></tbody>
               <tfoot>
                 <tr><th>Overall Avg</th><td id="deltaAvgBase">–</td><td id="deltaAvgLatest">–</td><td id="deltaAvgDiff">–</td></tr>
@@ -184,7 +132,6 @@
 
   <div class="footer-note">This tool is for self-reflection and planning. Data stays local unless you export.</div>
 
-  <!-- Modal -->
   <div id="modalOverlay" class="modal-overlay" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <header><h3 id="modalTitle">Edit Categories</h3><button class="btn" id="btnCloseModal">Close</button></header>
@@ -198,6 +145,9 @@
       </div>
     </div>
   </div>
-  <script src="/wheel_of_life/js/app.js" type="module"></script>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <script type="module" src="./js/app.js"></script>
 </body>
 </html>
