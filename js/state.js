@@ -7,7 +7,8 @@ export const state = {
   categories: [...DEFAULT_CATEGORIES],
   values: new Array(DEFAULT_CATEGORIES.length).fill(5),
   notes: new Array(DEFAULT_CATEGORIES.length).fill(''),
-  steps: new Array(DEFAULT_CATEGORIES.length).fill(null).map(() => new Array(10).fill('')),
+  // Updated state.steps to an array of objects
+  steps: new Array(DEFAULT_CATEGORIES.length).fill(null).map(() => ({ goal: '', current: '', next: '' })),
   snapshots: [],
   paletteHues: buildPalette(DEFAULT_CATEGORIES.length)
 };
@@ -16,7 +17,8 @@ export function ensureArrayLengths() {
   const len = state.categories.length;
   if (state.values.length !== len) state.values = new Array(len).fill(5);
   if (state.notes.length !== len) state.notes = new Array(len).fill('');
-  if (state.steps.length !== len) state.steps = new Array(len).fill(null).map(() => new Array(10).fill(''));
+  // Update the fallback to the new object structure
+  if (state.steps.length !== len) state.steps = new Array(len).fill(null).map(() => ({ goal: '', current: '', next: '' }));
   state.paletteHues = buildPalette(len);
 }
 
@@ -33,7 +35,15 @@ export function loadLocal() {
     state.categories = obj.categories;
     state.values = obj.values.map(v => roundTo(v, STEP_FINE));
     state.notes = obj.notes || new Array(state.categories.length).fill('');
-    state.steps = obj.steps && Array.isArray(obj.steps) ? obj.steps.map(arr => (Array.isArray(arr) ? arr.slice(0, 10).concat(new Array(Math.max(0, 10 - (arr.length || 0))).fill('')) : new Array(10).fill(''))) : new Array(state.categories.length).fill(null).map(() => new Array(10).fill(''));
+    
+    // Safely map old array data to the new object format, or load existing objects
+    state.steps = obj.steps && Array.isArray(obj.steps) 
+      ? obj.steps.map(item => {
+          if (Array.isArray(item)) return { goal: '', current: '', next: '' }; // Wipes old 10-step format safely
+          return { goal: item.goal || '', current: item.current || '', next: item.next || '' };
+        }) 
+      : new Array(state.categories.length).fill(null).map(() => ({ goal: '', current: '', next: '' }));
+      
     ensureArrayLengths();
     return true;
   } catch (e) { return false; }
