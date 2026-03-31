@@ -170,3 +170,19 @@
       padding: 8px; border-radius: 8px; border: 1px solid var(--input-border);
       background: var(--input-bg); color: var(--text);
     }
+/* New Action Plans Layout */
+.plan-fields { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.plan-field { display: flex; flex-direction: column; gap: 6px; }
+.plan-field label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.plan-field input, .plan-field textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text); font-size: 14px; font-family: inherit; }
+.plan-field textarea { resize: vertical; min-height: 70px; }
+.plan-field input:focus, .plan-field textarea:focus { outline: none; border-color: var(--input-border-focus); box-shadow: 0 0 0 3px rgba(143, 211, 255, 0.2); }
+
+/* Action Plan History Feed */
+.action-history-list { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+.action-history-item { padding: 14px; border: 1px dashed #2a325b; border-radius: 10px; background: #121631; }
+.action-history-date { font-weight: 800; color: var(--accent-2); border-bottom: 1px solid #1f2443; padding-bottom: 8px; margin-bottom: 12px; }
+.action-history-cat { margin-bottom: 12px; }
+.action-history-cat:last-child { margin-bottom: 0; }
+.action-history-cat strong { display: block; color: var(--accent); margin-bottom: 6px; font-size: 15px; }
+.action-history-text { font-size: 14px; color: var(--text); margin: 4px 0; background: rgba(0,0,0,0.2); padding: 6px 10px; border-radius: 6px; border-left: 3px solid var(--border); }
