@@ -31,7 +31,6 @@
     <button class="tab" data-tab="actions">Action Plans</button>
     <button class="tab" data-tab="history">History</button>
   </div>
-
   <main>
     <section id="page-wheel" class="page active">
       <section class="card">
@@ -66,7 +65,6 @@
         </div>
       </section>
     </section>
-
     <section id="page-actions" class="page">
       <section class="card">
         <h2>Action Plans</h2>
@@ -74,7 +72,6 @@
         <div id="plansPanel" class="plans-panel"></div>
       </section>
     </section>
-
     <section id="page-history" class="page">
       <section class="card">
         <h2>History (Time Series)</h2>
@@ -95,7 +92,6 @@
             <div class="form-field"><label for="isoToggle">Show BAA iso-lines</label><input type="checkbox" id="isoToggle" checked /></div>
           </div>
         </div>
-
         <div class="history-grid">
           <div class="chart-card">
             <div class="chart-title">Snapshots</div>
@@ -125,19 +121,15 @@
               </tfoot>
             </table>
           </div>
-          
           <div class="chart-card">
             <div class="chart-title">Action Plan History</div>
             <div id="actionPlanHistoryList" class="action-history-list"></div>
           </div>
-
         </div>
       </section>
     </section>
   </main>
-
   <div class="footer-note">This tool is for self-reflection and planning. Data stays local unless you export.</div>
-
   <div id="modalOverlay" class="modal-overlay" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <header><h3 id="modalTitle">Edit Categories</h3><button class="btn" id="btnCloseModal">Close</button></header>
@@ -151,7 +143,72 @@
       </div>
     </div>
   </div>
-
+    <div id="onboardingOverlay" class="modal-overlay" aria-hidden="true">
+    <div class="modal onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+      <div id="tourStep0" class="tour-step active">
+        <header><h3 id="onboardingTitle">Welcome to Wheel of Life</h3></header>
+        <div class="content">
+          <p>Assess your balance, set priorities, and plan actionable steps.</p>
+          <div class="privacy-notice">
+            <strong>🔒 Your Data is Yours</strong>
+            <p>All data is stored locally in your browser. Nothing is saved to the cloud. If you clear your browser data, your progress will be lost. Use the <strong>Save/Load</strong> and <strong>Export Snaps/Import</strong> buttons to back up or move your data.</p>
+          </div>
+          <details class="what-is-wheel">
+            <summary>What is the Wheel of Life?</summary>
+            <p>The Wheel of Life is a visual tool used in coaching and personal development. It divides life into categories (like Health, Career, Finances) and lets you rate your current satisfaction in each. A "bumpy" wheel indicates imbalance, helping you identify which areas need more attention to roll smoothly.</p>
+          </details>
+        </div>
+        <div class="footer">
+          <button class="btn ghost btnSkipTour">Skip Tour</button>
+          <button class="btn primary" id="btnStartTour">Start Tour</button>
+        </div>
+      </div>
+      <div id="tourStep1" class="tour-step">
+        <header><h3>Tab 1: The Wheel</h3></header>
+        <div class="content">
+          <p><strong>Assess your current reality.</strong></p>
+          <ul>
+            <li>Click or drag the yellow handles to score each category from 0 to 10.</li>
+            <li>Use the <strong>Edit Categories</strong> button to rename, add, or remove areas to fit your life.</li>
+            <li>Check the stats at the bottom to see your overall Average and Balance (σ).</li>
+          </ul>
+        </div>
+        <div class="footer">
+          <button class="btn ghost btnSkipTour">Skip</button>
+          <button class="btn primary btnNextTour" data-next="2">Next: Action Plans</button>
+        </div>
+      </div>
+      <div id="tourStep2" class="tour-step">
+        <header><h3>Tab 2: Action Plans</h3></header>
+        <div class="content">
+          <p><strong>Turn insights into action.</strong></p>
+          <ul>
+            <li>For each category, define your <em>Overall Goal</em>.</li>
+            <li>Log your <em>Current Step</em> (what you are doing right now).</li>
+            <li>Plan your <em>Next Step</em> (your immediate next action to improve your score).</li>
+          </ul>
+        </div>
+        <div class="footer">
+          <button class="btn ghost btnSkipTour">Skip</button>
+          <button class="btn primary btnNextTour" data-next="3">Next: History</button>
+        </div>
+      </div>
+      <div id="tourStep3" class="tour-step">
+        <header><h3>Tab 3: History</h3></header>
+        <div class="content">
+          <p><strong>Track your growth over time.</strong></p>
+          <ul>
+            <li>Click <strong>Snapshot</strong> in the top toolbar anytime to permanently log your current Wheel scores and Action Plans.</li>
+            <li>The History tab provides charts and tables comparing your past snapshots to see how your balance and averages improve.</li>
+            <li>Review your past action plans in the log at the bottom to see what steps you've accomplished.</li>
+          </ul>
+        </div>
+        <div class="footer">
+          <div></div> <button class="btn primary" id="btnFinishTour">Finish & Get Started</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <div id="toast" class="toast" aria-live="polite"></div>
 
   <script type="module" src="./js/app.js"></script>
