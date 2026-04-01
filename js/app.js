@@ -110,11 +110,147 @@ function renderActionPlanHistory() {
 
 /* ---------- MODAL ---------- */
 const modalOverlay = document.getElementById('modalOverlay');
-function trapFocus(e) { /* Paste trapFocus logic here */ }
-function openModal() { modalOverlay.style.display = 'grid'; buildEditList(); document.addEventListener('keydown', trapFocus); }
-function closeModal() { modalOverlay.style.display = 'none'; document.removeEventListener('keydown', trapFocus); }
+
+function openModal() { 
+    modalOverlay.style.display = 'grid'; 
+    modalOverlay.setAttribute('aria-hidden', 'false'); 
+    buildEditList(); 
+}
+
+function closeModal() { 
+    modalOverlay.style.display = 'none'; 
+    modalOverlay.setAttribute('aria-hidden', 'true'); 
+}
+
 document.getElementById('btnEditCats').addEventListener('click', openModal);
 document.getElementById('btnCloseModal').addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+// Centralized modal operations
+function deleteCategoryAt(idx) {
+    if (idx < 0 || idx >= state.categories.length) return;
+    state.categories.splice(idx, 1); 
+    state.values.splice(idx, 1); 
+    state.notes.splice(idx, 1); 
+    state.steps.splice(idx, 1);
+    
+    ensureArrayLengths(); 
+    saveLocal(); 
+    drawBase(); 
+    onWheelDataCommitted(); 
+    buildEditList(); 
+    showToast('Category deleted.');
+}
+
+function moveCategory(idx, dir) {
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= state.categories.length) return;
+    swapCategory(idx, newIdx); 
+    buildEditList();
+}
+
+function renameCategoryAt(idx, name) {
+    state.categories[idx] = name || `Category ${idx + 1}`;
+    saveLocal(); 
+    drawBase(); 
+    onWheelDataCommitted();
+    buildEditList();
+}
+
+function buildEditList() {
+    const list = document.getElementById('editList'); 
+    list.innerHTML = '';
+    
+    for (let i = 0; i < state.categories.length; i++) {
+        const row = document.createElement('div'); 
+        row.className = 'edit-row'; 
+        row.dataset.index = i.toString();
+        
+        const drag = document.createElement('span'); 
+        drag.textContent = '↕'; 
+        drag.title = 'Use ↑ ↓ buttons to reorder'; 
+        drag.style.opacity = '0.6';
+        
+        const input = document.createElement('input'); 
+        input.type = 'text'; 
+        input.value = state.categories[i];
+        input.addEventListener('change', () => { 
+            const idx = parseInt(row.dataset.index, 10); 
+            renameCategoryAt(idx, input.value); 
+        });
+        
+        const controls = document.createElement('div'); 
+        controls.style.display = 'flex'; 
+        controls.style.gap = '6px';
+        
+        const up = document.createElement('button'); 
+        up.className = 'btn'; 
+        up.textContent = '↑'; 
+        up.addEventListener('click', () => { 
+            const idx = parseInt(row.dataset.index, 10); 
+            moveCategory(idx, -1); 
+        });
+        
+        const down = document.createElement('button'); 
+        down.className = 'btn'; 
+        down.textContent = '↓'; 
+        down.addEventListener('click', () => { 
+            const idx = parseInt(row.dataset.index, 10); 
+            moveCategory(idx, +1); 
+        });
+        
+        const del = document.createElement('button'); 
+        del.className = 'btn danger'; 
+        del.textContent = 'Delete'; 
+        del.addEventListener('click', () => { 
+            const idx = parseInt(row.dataset.index, 10); 
+            deleteCategoryAt(idx); 
+        });
+        
+        controls.appendChild(up); controls.appendChild(down); controls.appendChild(del);
+        row.appendChild(drag); row.appendChild(input); row.appendChild(controls); 
+        list.appendChild(row);
+    }
+}
+
+function swapCategory(a, b) {
+    [state.categories[a], state.categories[b]] = [state.categories[b], state.categories[a]];
+    [state.values[a], state.values[b]] = [state.values[b], state.values[a]];
+    [state.notes[a], state.notes[b]] = [state.notes[b], state.notes[a]];
+    [state.steps[a], state.steps[b]] = [state.steps[b], state.steps[a]];
+    saveLocal(); 
+    drawBase();
+    onWheelDataCommitted();
+}
+
+// Modal actions: Add Category & Reset to Defaults
+document.getElementById('btnAddCategory').addEventListener('click', () => {
+    const nextIndex = state.categories.length;
+    state.categories.push(`Category ${nextIndex + 1}`);
+    state.values.push(5);
+    state.notes.push('');
+    // Push the new object format for the Action Plans
+    state.steps.push({ goal: '', current: '', next: '' });
+    
+    saveLocal();
+    drawBase();
+    onWheelDataCommitted();
+    buildEditList();
+});
+
+document.getElementById('btnResetCategories').addEventListener('click', () => {
+    if (!confirm('Reset categories to defaults? This will overwrite names and reset scores to 5.')) return;
+    state.categories = [...DEFAULT_CATEGORIES];
+    state.values = new Array(state.categories.length).fill(5);
+    state.notes = new Array(state.categories.length).fill('');
+    // Reset to the new object format for the Action Plans
+    state.steps = new Array(state.categories.length).fill(null).map(() => ({ goal: '', current: '', next: '' }));
+    
+    saveLocal();
+    drawBase();
+    onWheelDataCommitted();
+    buildEditList();
+});
 
 /* ---------- TOOLBAR ---------- */
 document.getElementById('btnSave').addEventListener('click', () => {
