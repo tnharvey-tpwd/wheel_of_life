@@ -186,3 +186,38 @@
 .action-history-cat:last-child { margin-bottom: 0; }
 .action-history-cat strong { display: block; color: var(--accent); margin-bottom: 6px; font-size: 15px; }
 .action-history-text { font-size: 14px; color: var(--text); margin: 4px 0; background: rgba(0,0,0,0.2); padding: 6px 10px; border-radius: 6px; border-left: 3px solid var(--border); }
+/* Onboarding & Tour Modal */
+.tour-step { display: none; }
+.tour-step.active { display: block; }
+
+.privacy-notice {
+  background: rgba(239, 83, 80, 0.1); /* light tint of danger var */
+  border: 1px solid rgba(239, 83, 80, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 16px 0;
+}
+.privacy-notice strong { color: #ff8a80; display: block; margin-bottom: 4px; font-size: 14px; }
+.privacy-notice p { margin: 0; font-size: 13px; color: var(--text); }
+
+.what-is-wheel {
+  background: #121631;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.what-is-wheel summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--accent);
+  user-select: none;
+  font-size: 14px;
+}
+.what-is-wheel summary:hover { color: var(--accent-2); }
+.what-is-wheel p { margin: 8px 0 0 0; font-size: 13px; color: var(--muted); }
+
+.tour-step p { margin-top: 0; }
+.tour-step ul { margin: 12px 0; padding-left: 20px; color: var(--text); font-size: 14px; }
+.tour-step li { margin-bottom: 8px; }
+.tour-step li strong, .tour-step li em { color: var(--accent-2); }
