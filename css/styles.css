@@ -221,3 +221,7 @@
 .tour-step ul { margin: 12px 0; padding-left: 20px; color: var(--text); font-size: 14px; }
 .tour-step li { margin-bottom: 8px; }
 .tour-step li strong, .tour-step li em { color: var(--accent-2); }
+/* Help Modal Styles */
+.help-content h4 { margin: 16px 0 4px 0; color: var(--accent); font-size: 15px; }
+.help-content h4:first-child { margin-top: 0; }
+.help-content p { margin: 0 0 12px 0; font-size: 14px; color: var(--muted); }
