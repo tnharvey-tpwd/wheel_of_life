@@ -20,6 +20,7 @@
       <button class="btn primary" id="btnExport">Export PNG</button>
       <button class="btn" id="btnSnapshot">Snapshot</button>
       <button class="btn ghost" id="btnPrint">Print</button>
+      <button class="btn ghost" id="btnHelp">Help</button>
       <button class="btn" id="btnEditCats">Edit Categories</button>
       <input type="file" id="fileInput" accept=".json,.txt" style="display:none" />
       <input type="file" id="snapFileInput" accept=".json,.txt" style="display:none" />
@@ -206,6 +207,32 @@
         <div class="footer">
           <div></div> <button class="btn primary" id="btnFinishTour">Finish & Get Started</button>
         </div>
+      </div>
+    </div>
+  </div>
+    <div id="helpOverlay" class="modal-overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <header>
+        <h3 id="helpTitle">Help & Information</h3>
+        <button class="btn" id="btnCloseHelp">Close</button>
+      </header>
+      <div class="content help-content">
+        <h4>1. The Wheel</h4>
+        <p>Score each category from 0 to 10 by clicking or dragging the yellow handles. Use "Edit Categories" to customize your wheel to fit your life.</p>
+
+        <h4>2. Action Plans</h4>
+        <p>Turn your wheel scores into action. Define an overall goal, your current step, and the next immediate step to improve your score in each category.</p>
+
+        <h4>3. History</h4>
+        <p>Take snapshots to log your progress over time. View charts and tables to see how your balance and averages change.</p>
+        
+        <div class="privacy-notice" style="margin-top: 16px;">
+          <strong>🔒 Local Storage Only</strong>
+          <p>Your data is saved entirely in this browser. Use the Save/Load or Export/Import Snaps buttons to back up or move your data across devices.</p>
+        </div>
+      </div>
+      <div class="footer">
+        <button class="btn primary" id="btnRestartTour">Restart Guided Tour</button>
       </div>
     </div>
   </div>
