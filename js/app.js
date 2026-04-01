@@ -149,5 +149,43 @@ function init() {
   loadSnapshots();
   initWheel(onWheelDataCommitted); // Pass the callback to the wheel
   onWheelDataCommitted(); // Initial render of side-effects
+  initOnboarding();
+}
+/* ---------- ONBOARDING / TOUR ---------- */
+function initOnboarding() {
+  const hasSeenTour = localStorage.getItem('wheelOfLifeTourSeen');
+  const overlay = document.getElementById('onboardingOverlay');
+  
+  // If they haven't seen it, show the overlay
+  if (!hasSeenTour && overlay) {
+    overlay.style.display = 'grid';
+  }
+
+  function closeTour() {
+    if (overlay) overlay.style.display = 'none';
+    localStorage.setItem('wheelOfLifeTourSeen', 'true'); // Save flag so it doesn't show again
+  }
+
+  function showStep(stepIndex) {
+    document.querySelectorAll('.tour-step').forEach(el => el.classList.remove('active'));
+    document.getElementById(`tourStep${stepIndex}`).classList.add('active');
+  }
+
+  // Event Listeners for Tour
+  document.getElementById('btnStartTour')?.addEventListener('click', () => showStep(1));
+  document.getElementById('btnFinishTour')?.addEventListener('click', closeTour);
+  
+  // Handle multiple skip buttons
+  document.querySelectorAll('.btnSkipTour').forEach(btn => {
+    btn.addEventListener('click', closeTour);
+  });
+
+  // Handle next buttons
+  document.querySelectorAll('.btnNextTour').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const nextStep = e.target.getAttribute('data-next');
+      showStep(nextStep);
+    });
+  });
 }
 init();
