@@ -188,4 +188,30 @@ function initOnboarding() {
     });
   });
 }
+/* ---------- HELP MODAL & RESTART TOUR ---------- */
+const helpOverlay = document.getElementById('helpOverlay');
+const onboardingOverlay = document.getElementById('onboardingOverlay');
+
+// Open Help Modal
+document.getElementById('btnHelp')?.addEventListener('click', () => {
+  if (helpOverlay) helpOverlay.style.display = 'grid';
+});
+
+// Close Help Modal
+document.getElementById('btnCloseHelp')?.addEventListener('click', () => {
+  if (helpOverlay) helpOverlay.style.display = 'none';
+});
+
+// Restart Tour from Help Modal
+document.getElementById('btnRestartTour')?.addEventListener('click', () => {
+  // Close the Help modal
+  if (helpOverlay) helpOverlay.style.display = 'none';
+  
+  // Reset the tour to Step 0 and open the Onboarding overlay
+  document.querySelectorAll('.tour-step').forEach(el => el.classList.remove('active'));
+  const step0 = document.getElementById('tourStep0');
+  if (step0) step0.classList.add('active');
+  
+  if (onboardingOverlay) onboardingOverlay.style.display = 'grid';
+});
 init();
