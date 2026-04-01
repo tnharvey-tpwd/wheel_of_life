@@ -253,17 +253,125 @@ document.getElementById('btnResetCategories').addEventListener('click', () => {
 });
 
 /* ---------- TOOLBAR ---------- */
-document.getElementById('btnSave').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify({ ...state, savedAt: new Date().toISOString() }, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'wheel-of-life.json'; document.body.appendChild(a); a.click(); a.remove(); showToast('State saved to file.');
-});
-// (Wire up btnLoad, btnNew, btnExportSnaps, btnImportSnaps here the same way as your monolith, calling `refreshAllHistoryViews()` when snapshots change)
 
+// --- Save ---
+document.getElementById('btnSave').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify({ ...state, savedAt: new Date().toISOString() }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'wheel-of-life.json'; document.body.appendChild(a); a.click(); a.remove(); showToast('State saved to file.');
+});
+
+// --- Load ---
+const fileInput = document.getElementById('fileInput');
+document.getElementById('btnLoad').addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            const obj = JSON.parse(event.target.result);
+            if (!obj || !obj.categories || !obj.values) throw new Error('Invalid save file.');
+            
+            state.categories = obj.categories;
+            state.values = obj.values.map(v => roundTo(v, STEP_FINE));
+            state.notes = obj.notes || new Array(state.categories.length).fill('');
+            
+            // Safely map old steps to new format if needed
+            state.steps = obj.steps && Array.isArray(obj.steps) 
+                ? obj.steps.map(item => {
+                    if (Array.isArray(item)) return { goal: '', current: '', next: '' };
+                    return { goal: item.goal || '', current: item.current || '', next: item.next || '' };
+                }) 
+                : new Array(state.categories.length).fill(null).map(() => ({ goal: '', current: '', next: '' }));
+            
+            ensureArrayLengths();
+            saveLocal();
+            drawBase(); 
+            onWheelDataCommitted(); 
+            showToast('State loaded from file.');
+        } catch (err) {
+            alert('Could not load file: ' + err.message);
+        }
+        e.target.value = ''; // Reset input so the same file can be loaded again if needed
+    };
+    reader.readAsText(file);
+});
+
+// --- New ---
+document.getElementById('btnNew').addEventListener('click', () => {
+    if (!confirm('Start a new wheel? Unsaved progress will be lost.')) return;
+    state.categories = [...DEFAULT_CATEGORIES];
+    state.values = new Array(state.categories.length).fill(5);
+    state.notes = new Array(state.categories.length).fill('');
+    state.steps = new Array(state.categories.length).fill(null).map(() => ({ goal: '', current: '', next: '' }));
+    ensureArrayLengths();
+    saveLocal();
+    drawBase();
+    onWheelDataCommitted();
+    showToast('New wheel started.');
+});
+
+// --- Snapshot ---
 document.getElementById('btnSnapshot').addEventListener('click', () => {
     // Deep clone steps to preserve the text at the time of snapshot
     const stepsCopy = JSON.parse(JSON.stringify(state.steps)); 
     state.snapshots.push({ ts: Date.now(), categories: [...state.categories], values: state.values.map(v => roundTo(v, STEP_FINE)), steps: stepsCopy });
-    saveSnapshots(); refreshAllHistoryViews(); showToast('Snapshot saved locally.');
+    saveSnapshots(); 
+    refreshAllHistoryViews(); 
+    showToast('Snapshot saved locally.');
+});
+
+// --- Export Snapshots ---
+document.getElementById('btnExportSnaps').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify({ snapshots: state.snapshots }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); 
+    a.href = URL.createObjectURL(blob); 
+    a.download = 'wheel-of-life-snapshots.json'; 
+    document.body.appendChild(a); 
+    a.click(); 
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    showToast('Snapshots exported.');
+});
+
+// --- Import Snapshots ---
+const snapFileInput = document.getElementById('snapFileInput');
+document.getElementById('btnImportSnaps').addEventListener('click', () => snapFileInput.click());
+snapFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            const obj = JSON.parse(event.target.result);
+            if (!obj.snapshots || !Array.isArray(obj.snapshots)) throw new Error('Invalid snapshot file');
+            
+            // Map snapshots, preserving the steps data if it exists
+            state.snapshots = obj.snapshots.map(s => ({ 
+                ts: s.ts, 
+                categories: s.categories, 
+                values: s.values.map(v => roundTo(v, STEP_FINE)),
+                steps: s.steps || null
+            }));
+            
+            saveSnapshots(); 
+            refreshAllHistoryViews(); 
+            showToast('Snapshots imported.');
+        } catch (err) { 
+            alert('Could not import snapshots: ' + err.message); 
+        }
+        e.target.value = ''; // Reset input
+    };
+    reader.readAsText(file);
+});
+
+// --- Clear Snapshots ---
+document.getElementById('btnClearSnaps')?.addEventListener('click', () => {
+    if(!confirm('Are you sure you want to delete all snapshots? This cannot be undone.')) return;
+    state.snapshots = [];
+    saveSnapshots();
+    refreshAllHistoryViews();
+    showToast('Snapshots cleared.');
 });
 
 /* ---------- TABS ---------- */
