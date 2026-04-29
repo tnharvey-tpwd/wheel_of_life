@@ -12,7 +12,7 @@ export const DISABLE_MODE = 'ceil';
 export const SAT_MIN = 30;
 export const SAT_MAX = 80;
 export const LIGHTNESS = 52;
-export const DEFAULT_CATEGORIES = ["Career","Finance","Health","Family & Friends","Romance","Personal Growth","Fun & Recreation","Physical Environment"];
+export const DEFAULT_CATEGORIES = ["Family & Friends","Relationships & Love","Career & Mission","Financial","Self-Fulfillment","Spiritual & Religious","Self-Care","Fun & Hobbies","Contribution","Health & Fitness"];
 
 /* ---------- MATH & HELPERS ---------- */
 export function angleForIndex(i, count) { const step = (2 * Math.PI) / count; return -Math.PI / 2 + (i * step); }
