@@ -57,10 +57,31 @@ export function drawBase() {
     
     const labelR = RADIUS + 18, labelPt = pointOnCircle(theta, labelR);
     const lab = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    lab.setAttribute('x', labelPt.x.toFixed(2)); lab.setAttribute('y', labelPt.y.toFixed(2)); lab.setAttribute('class', 'cat-label');
-    lab.setAttribute('text-anchor', (Math.abs(Math.cos(theta)) < 0.3) ? 'middle' : (Math.cos(theta) > 0 ? 'start' : 'end'));
-    lab.setAttribute('dominant-baseline', (Math.sin(theta) > 0.3) ? 'hanging' : (Math.sin(theta) < -0.3 ? 'baseline' : 'middle'));
-    lab.textContent = state.categories[i]; lFrag.appendChild(lab);
+    
+    // Set the anchor point for the text
+    lab.setAttribute('x', labelPt.x.toFixed(2)); 
+    lab.setAttribute('y', labelPt.y.toFixed(2)); 
+    lab.setAttribute('class', 'cat-label');
+    
+    // --- Tangential Orientation Math ---
+    // Convert the radian angle to degrees for SVG
+    let thetaDeg = theta * (180 / Math.PI);
+    
+    // If Math.sin(theta) is less than 0, the label is above the horizontal horizon.
+    // We add 90 degrees so the bottoms face the circle.
+    // Otherwise, it's on the bottom half, so we subtract 90 degrees to keep it upright.
+    let rotation = (Math.sin(theta) < 0) ? thetaDeg + 90 : thetaDeg - 90;
+    
+    // Apply the rotation, ensuring it rotates around its own anchor coordinate (x, y)
+    lab.setAttribute('transform', `rotate(${rotation}, ${labelPt.x.toFixed(2)}, ${labelPt.y.toFixed(2)})`);
+    
+    // Because the text is now rotated perfectly along the curve, 
+    // we can center it perfectly on both axes at the exact radius of R + 18.
+    lab.setAttribute('text-anchor', 'middle');
+    lab.setAttribute('dominant-baseline', 'middle');
+    
+    lab.textContent = state.categories[i]; 
+    lFrag.appendChild(lab);
 
     const hp = pointOnCircle(theta, valueToRadius(state.values[i]));
     const handle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
