@@ -64,6 +64,50 @@
     .card h2 { margin: 0 0 6px; font-size: 18px; }
     .small { font-size: 12px; color: var(--muted); }
 
+      /* Collapsible Menu */
+.menu-container {
+  margin-left: auto; /* Pushes the menu to the far right of the flex container */
+  position: relative;
+}
+
+.dropdown-content {
+  display: none; /* Hidden by default */
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: #12162b;
+  border: 1px solid #1f2443;
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+  z-index: 100;
+}
+
+.dropdown-content.show {
+  display: flex;
+}
+
+.dropdown-content .btn {
+  width: 100%;
+  text-align: left;
+}
+
+/* Card Header Layout */
+.card-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.card-header-flex h2 {
+  margin: 0 0 4px; /* Slightly adjust heading margin to fit the flex container */
+}
+
     /* Wheel */
     .wheel-wrap { position: relative; min-height: 640px; display: grid; place-items: center; }
     #wheel { width: 100%; max-width: 1100px; height: auto; aspect-ratio: 1 / 1; }
