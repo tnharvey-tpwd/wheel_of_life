@@ -312,13 +312,15 @@ document.getElementById('btnNew').addEventListener('click', () => {
 });
 
 // --- Snapshot ---
-document.getElementById('btnSnapshot').addEventListener('click', () => {
-    // Deep clone steps to preserve the text at the time of snapshot
-    const stepsCopy = JSON.parse(JSON.stringify(state.steps)); 
-    state.snapshots.push({ ts: Date.now(), categories: [...state.categories], values: state.values.map(v => roundTo(v, STEP_FINE)), steps: stepsCopy });
-    saveSnapshots(); 
-    refreshAllHistoryViews(); 
-    showToast('Snapshot saved locally.');
+document.querySelectorAll('.btn-snapshot').forEach(btn => {
+  btn.addEventListener('click', () => {
+      // Deep clone steps to preserve the text at the time of snapshot
+      const stepsCopy = JSON.parse(JSON.stringify(state.steps)); 
+      state.snapshots.push({ ts: Date.now(), categories: [...state.categories], values: state.values.map(v => roundTo(v, STEP_FINE)), steps: stepsCopy });
+      saveSnapshots(); 
+      refreshAllHistoryViews(); 
+      showToast('Snapshot saved locally.');
+  });
 });
 
 // --- Export Snapshots ---
@@ -382,6 +384,25 @@ tabs.forEach(t => t.addEventListener('click', () => {
   if (t.dataset.tab === 'history') refreshAllHistoryViews();
   if (t.dataset.tab === 'actions') buildPlansPanel();
 }));
+
+/* ---------- MENU TOGGLE ---------- */
+const btnMenu = document.getElementById('btnMenu');
+const dropdownMenu = document.getElementById('dropdownMenu');
+
+if (btnMenu && dropdownMenu) {
+  // Toggle menu on click
+  btnMenu.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent immediate closing
+    dropdownMenu.classList.toggle('show');
+  });
+
+  // Close menu when clicking outside of it
+  document.addEventListener('click', (e) => {
+    if (!dropdownMenu.contains(e.target) && e.target !== btnMenu) {
+      dropdownMenu.classList.remove('show');
+    }
+  });
+}
 
 /* ---------- INIT ---------- */
 function init() {
