@@ -12,31 +12,38 @@
       <h1>Wheel of Life</h1>
       <div class="sub">Assess balance, set priorities, and plan actions</div>
     </div>
-    <div class="toolbar">
-      <button class="btn" id="btnFullscreen">Full Screen</button>
-      <button class="btn" id="btnNew">New</button>
-      <button class="btn" id="btnSave">Save</button>
-      <button class="btn" id="btnLoad">Load</button>
-      <button class="btn primary" id="btnExport">Export PNG</button>
-      <button class="btn" id="btnSnapshot">Snapshot</button>
-      <button class="btn ghost" id="btnPrint">Print</button>
-      <button class="btn ghost" id="btnHelp">Help</button>
-      <button class="btn" id="btnEditCats">Edit Categories</button>
-      <input type="file" id="fileInput" accept=".json,.txt" style="display:none" />
-      <input type="file" id="snapFileInput" accept=".json,.txt" style="display:none" />
-    </div>
+    <input type="file" id="fileInput" accept=".json,.txt" style="display:none" />
+    <input type="file" id="snapFileInput" accept=".json,.txt" style="display:none" />
   </header>
 
   <div class="tabs">
     <button class="tab active" data-tab="wheel">Wheel</button>
     <button class="tab" data-tab="actions">Action Plans</button>
     <button class="tab" data-tab="history">History</button>
+    
+    <div class="menu-container">
+      <button class="btn" id="btnMenu">☰ Menu</button>
+      <div id="dropdownMenu" class="dropdown-content">
+        <button class="btn" id="btnFullscreen">Full Screen</button>
+        <button class="btn" id="btnNew">New</button>
+        <button class="btn" id="btnSave">Save</button>
+        <button class="btn" id="btnLoad">Load</button>
+        <button class="btn primary" id="btnExport">Export PNG</button>
+        <button class="btn ghost" id="btnPrint">Print</button>
+        <button class="btn ghost" id="btnHelp">Help</button>
+        <button class="btn" id="btnEditCats">Edit Categories</button>
+      </div>
   </div>
   <main>
     <section id="page-wheel" class="page active">
       <section class="card">
-        <h2>Interactive Wheel</h2>
-        <div class="small">Click or drag the yellow handles (snaps to 0.5). Use keyboard on legend rows.</div>
+        <div class="card-header-flex">
+          <div>
+            <h2>Interactive Wheel</h2>
+            <div class="small">Click or drag the yellow handles (snaps to 0.5). Use keyboard on legend rows.</div>
+          </div>
+          <button class="btn primary btn-snapshot">Snapshot</button>
+        </div>
         <div class="wheel-wrap">
           <svg id="wheel" viewBox="0 0 1100 1100" role="img" aria-label="Wheel of Life chart" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -67,9 +74,14 @@
       </section>
     </section>
     <section id="page-actions" class="page">
-      <section class="card">
-        <h2>Action Plans</h2>
-        <div class="small">Define your overall goal, current step, and next step for each category.</div>
+     <section class="card">
+        <div class="card-header-flex">
+          <div>
+            <h2>Action Plans</h2>
+            <div class="small">Define your overall goal, current step, and next step for each category.</div>
+          </div>
+          <button class="btn primary btn-snapshot">Snapshot</button>
+        </div>
         <div id="plansPanel" class="plans-panel"></div>
       </section>
     </section>
